@@ -34,6 +34,20 @@
     </fragment>
 
     <fragment
+        android:id="@+id/AddBranchFragment"
+        android:name="com.example.py_damb2026ii.AddBranchFragment"
+        android:label="Registrar Sucursal"
+        tools:layout="@layout/fragment_add_branch">
+    </fragment>
+
+    <fragment
+        android:id="@+id/BranchListFragment"
+        android:name="com.example.py_damb2026ii.BranchListFragment"
+        android:label="Lista de Sucursales"
+        tools:layout="@layout/fragment_branch_list">
+    </fragment>
+
+    <fragment
         android:id="@+id/FirstFragment"
         android:name="com.example.py_damb2026ii.FirstFragment"
         android:label="@string/first_fragment_label"
