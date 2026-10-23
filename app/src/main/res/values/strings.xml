@@ -74,5 +74,5 @@
     <string name="lblUrlDisc">URL</string>
     <string name="btnAddDisc">Guardar</string>
     <string name="btnCancelAddDisc">Cancelar</string>
-    <string name="dominioWS">https://jcachay.pythonanywhere.com/</string>
+    <string name="dominioWS">https://usatapp.pythonanywhere.com/</string>
 </resources>

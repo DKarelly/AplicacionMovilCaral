@@ -1,5 +1,7 @@
 package com.example.py_damb2026ii;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
@@ -43,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
         });
         setSupportActionBar(binding.toolbar);
 
+        SharedPreferences sharedPref = getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
+        String userRole = sharedPref.getString("USER_ROLE", "Solicitante");
+
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment_content_main);
 
@@ -53,16 +58,29 @@ public class MainActivity extends AppCompatActivity {
             NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
             binding.toolbar.setNavigationIcon(R.drawable.usat_menu);
+            binding.toolbar.setTitle("USAT APP (" + userRole + ")");
 
             navController.addOnDestinationChangedListener((controller,
                                                            destination,
                                                            arguments) -> {
-                binding.toolbar.setTitle(R.string.usat_app_name);
+                binding.toolbar.setTitle("USAT APP (" + userRole + ")");
                 if (destination.getId() == R.id.FirstFragment) {
                     binding.toolbar.setNavigationIcon(R.drawable.usat_menu);
                 }
             });
-            binding.fab.setOnClickListener(v -> navController.navigate(R.id.AddDiscFragment));
+
+            if ("Solicitante".equalsIgnoreCase(userRole)) {
+                binding.fab.setVisibility(View.VISIBLE);
+                binding.fab.setOnClickListener(v -> navController.navigate(R.id.AddIncidentFragment));
+            } else if ("Técnico".equalsIgnoreCase(userRole)) {
+                binding.fab.setVisibility(View.VISIBLE);
+                binding.fab.setOnClickListener(v -> Snackbar.make(v, "Modo Técnico: Gestión de Incidentes Asignados", Snackbar.LENGTH_LONG).setAnchorView(R.id.fab).show());
+            } else if ("Administrador".equalsIgnoreCase(userRole)) {
+                binding.fab.setVisibility(View.VISIBLE);
+                binding.fab.setOnClickListener(v -> Snackbar.make(v, "Modo Administrador: Reportes y Métricas", Snackbar.LENGTH_LONG).setAnchorView(R.id.fab).show());
+            } else {
+                binding.fab.setVisibility(View.GONE);
+            }
         }
         /*
         binding.fab.setOnClickListener(

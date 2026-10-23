@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/HomeFragment">
+    app:startDestination="@id/IncidentListFragment">
 
     <fragment
         android:id="@+id/HomeFragment"
@@ -17,6 +17,20 @@
         android:name="com.example.py_damb2026ii.AddDiscFragment"
         android:label="Agregar disco"
         tools:layout="@layout/fragment_add_disc">
+    </fragment>
+
+    <fragment
+        android:id="@+id/AddIncidentFragment"
+        android:name="com.example.py_damb2026ii.AddIncidentFragment"
+        android:label="Registrar Incidente"
+        tools:layout="@layout/fragment_add_incident">
+    </fragment>
+
+    <fragment
+        android:id="@+id/IncidentListFragment"
+        android:name="com.example.py_damb2026ii.IncidentListFragment"
+        android:label="Lista de Incidentes"
+        tools:layout="@layout/fragment_incident_list">
     </fragment>
 
     <fragment
