@@ -72,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
             if ("Solicitante".equalsIgnoreCase(userRole)) {
                 binding.fab.setVisibility(View.VISIBLE);
                 binding.fab.setOnClickListener(v -> navController.navigate(R.id.AddIncidentFragment));
+                try {
+                    navController.navigate(R.id.SolicitanteHomeFragment);
+                } catch (Exception ignored) {}
             } else if ("Técnico".equalsIgnoreCase(userRole)) {
                 binding.fab.setVisibility(View.VISIBLE);
                 binding.fab.setOnClickListener(v -> Snackbar.make(v, "Modo Técnico: Gestión de Incidentes Asignados", Snackbar.LENGTH_LONG).setAnchorView(R.id.fab).show());

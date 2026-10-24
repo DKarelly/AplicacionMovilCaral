@@ -34,6 +34,27 @@
     </fragment>
 
     <fragment
+        android:id="@+id/SolicitanteHomeFragment"
+        android:name="com.example.py_damb2026ii.SolicitanteHomeFragment"
+        android:label="Vista del Solicitante"
+        tools:layout="@layout/fragment_solicitante_home">
+    </fragment>
+
+    <fragment
+        android:id="@+id/IncidentConfirmationFragment"
+        android:name="com.example.py_damb2026ii.IncidentConfirmationFragment"
+        android:label="Confirmación"
+        tools:layout="@layout/fragment_incident_confirmation">
+    </fragment>
+
+    <fragment
+        android:id="@+id/IncidentDetailFragment"
+        android:name="com.example.py_damb2026ii.IncidentDetailFragment"
+        android:label="Detalle del Incidente"
+        tools:layout="@layout/fragment_incident_detail">
+    </fragment>
+
+    <fragment
         android:id="@+id/AddBranchFragment"
         android:name="com.example.py_damb2026ii.AddBranchFragment"
         android:label="Registrar Sucursal"
