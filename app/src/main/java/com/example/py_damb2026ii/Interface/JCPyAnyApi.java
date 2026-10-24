@@ -14,9 +14,11 @@ import com.example.py_damb2026ii.model.RptaObtenerSucursales;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public interface JCPyAnyApi {
@@ -31,22 +33,38 @@ public interface JCPyAnyApi {
     Call<RptaInsertarDisco> insertarDisco(@Header("Authorization") String authorization,
                                               @Body RequInsertarDisco requInsertarDisco);
 
-    @GET("api_obtenerIncidente")
+    // Incidentes (según Flask API)
+    @GET("api_obtenerIncidentes")
     Call<RptaObtenerIncidentes> obtenerIncidentes(@Header("Authorization") String authorization);
 
-    @POST("/api_insertarIncidente")
+    @POST("api_registrarIncidente")
     Call<RptaInsertarIncidente> insertarIncidente(@Header("Authorization") String authorization,
                                                   @Body RequInsertarIncidente requInsertarIncidente);
 
+    @PUT("api_asignarTecnico/{p_id}")
+    Call<RptaInsertarIncidente> asignarTecnico(@Header("Authorization") String authorization,
+                                               @Path("p_id") int idIncidente,
+                                               @Body java.util.Map<String, Integer> body);
+
+    @PUT("api_cambiarEstadoIncidente/{p_id}")
+    Call<RptaInsertarIncidente> cambiarEstadoIncidente(@Header("Authorization") String authorization,
+                                                       @Path("p_id") int idIncidente,
+                                                       @Body java.util.Map<String, String> body);
+
+    // Sucursales (según Flask API)
     @GET("api_buscarSucursalNombre/{p_nombre}")
     Call<RptaObtenerSucursales> buscarSucursalNombre(@Header("Authorization") String authorization,
                                                     @Path("p_nombre") String nombre);
 
-    @GET("api_obtenerSucursal")
+    @GET("api_listarSucursales")
     Call<RptaObtenerSucursales> obtenerSucursales(@Header("Authorization") String authorization);
 
     @POST("api_insertarSucursal")
     Call<RptaInsertarSucursal> insertarSucursal(@Header("Authorization") String authorization,
                                                 @Body RequInsertarSucursal requInsertarSucursal);
+
+    @DELETE("api_eliminarSucursal/{p_id}")
+    Call<RptaInsertarSucursal> eliminarSucursal(@Header("Authorization") String authorization,
+                                                @Path("p_id") int idSucursal);
 
 }
