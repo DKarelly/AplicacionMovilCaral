@@ -78,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
             } else if ("Técnico".equalsIgnoreCase(userRole)) {
                 binding.fab.setVisibility(View.VISIBLE);
                 binding.fab.setOnClickListener(v -> Snackbar.make(v, "Modo Técnico: Gestión de Incidentes Asignados", Snackbar.LENGTH_LONG).setAnchorView(R.id.fab).show());
+                try {
+                    navController.navigate(R.id.TecnicoHomeFragment);
+                } catch (Exception ignored) {}
             } else if ("Administrador".equalsIgnoreCase(userRole)) {
                 binding.fab.setVisibility(View.VISIBLE);
                 binding.fab.setOnClickListener(v -> Snackbar.make(v, "Modo Administrador: Reportes y Métricas", Snackbar.LENGTH_LONG).setAnchorView(R.id.fab).show());

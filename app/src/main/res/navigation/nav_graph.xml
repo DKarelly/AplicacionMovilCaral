@@ -34,6 +34,13 @@
     </fragment>
 
     <fragment
+        android:id="@+id/TecnicoHomeFragment"
+        android:name="com.example.py_damb2026ii.TecnicoHomeFragment"
+        android:label="Vista del Técnico"
+        tools:layout="@layout/fragment_tecnico_home">
+    </fragment>
+
+    <fragment
         android:id="@+id/SolicitanteHomeFragment"
         android:name="com.example.py_damb2026ii.SolicitanteHomeFragment"
         android:label="Vista del Solicitante"
