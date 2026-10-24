@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "titulo": "Falla en router principal",
+    "descripcion": "El switch central de la sucursal norte no responde.",
+    "categoria": "Red",
+    "prioridad": "Alta",
+    "estado": "Abierto",
+    "id_sucursal": 1,
+    "fecha_registro": "2026-10-23 10:30:00"
+  },
+  {
+    "id": 2,
+    "titulo": "Impresora atascada",
+    "descripcion": "La impresora láser de contabilidad presenta error de carro.",
+    "categoria": "Impresora",
+    "prioridad": "Media",
+    "estado": "En proceso",
+    "id_sucursal": 2,
+    "fecha_registro": "2026-10-23 11:15:00"
+  },
+  {
+    "id": 3,
+    "titulo": "Actualización de software ERP",
+    "descripcion": "Solicitud de instalación del nuevo parche de seguridad.",
+    "categoria": "Software",
+    "prioridad": "Baja",
+    "estado": "Cerrado",
+    "id_sucursal": 1,
+    "fecha_registro": "2026-10-22 09:00:00"
+  }
+]
