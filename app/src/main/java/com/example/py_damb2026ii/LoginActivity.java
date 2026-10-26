@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,20 +41,13 @@ public class LoginActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Configurar Spinner de Roles
-        String[] roles = {"Administrador", "Técnico", "Solicitante"};
-        ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, roles);
-        roleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.spinnerRolLogin.setAdapter(roleAdapter);
-
         binding.nextButton.setOnClickListener(v -> {
             binding.nextButton.setEnabled(false);
 
             String username = binding.usernameEditText.getText() != null ? binding.usernameEditText.getText().toString().trim() : "";
             String password = binding.passwordEditText.getText() != null ? binding.passwordEditText.getText().toString().trim() : "";
-            String selectedRole = binding.spinnerRolLogin.getSelectedItem() != null ? binding.spinnerRolLogin.getSelectedItem().toString() : "Administrador";
 
-            obtenerTokenApi(username, password, selectedRole, () -> {
+            obtenerTokenApi(username, password, () -> {
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
@@ -63,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void obtenerTokenApi(String username, String password, String selectedRole, Runnable onTokenSaved) {
+    private void obtenerTokenApi(String username, String password, Runnable onTokenSaved) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getString(R.string.dominioWS))
                 .addConverterFactory(GsonConverterFactory.create())
@@ -76,27 +68,17 @@ public class LoginActivity extends AppCompatActivity {
         call.enqueue(new Callback<RptaAuth>() {
             @Override
             public void onResponse(@NonNull Call<RptaAuth> call, @NonNull Response<RptaAuth> response) {
-                SharedPreferences.Editor editor = sharedPref.edit();
                 if (!response.isSuccessful()) {
-                    // Si falla el servidor, permitimos acceso con el rol seleccionado explícitamente por el usuario
-                    editor.putString("TOKEN_JWT", "fallback_token");
-                    editor.putString("USER_ROLE", selectedRole);
-                    editor.apply();
-
-                    if (onTokenSaved != null) {
-                        onTokenSaved.run();
-                    }
+                    binding.nextButton.setEnabled(true);
+                    binding.txtRptaJson.setText("Error de autenticación (Código: " + response.code() + ")");
                 } else {
                     RptaAuth rptaAuth = response.body();
-                    if (rptaAuth != null && rptaAuth.getAccess_token() != null) {
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    if (rptaAuth != null) {
                         editor.putString("TOKEN_JWT", rptaAuth.getAccess_token());
-                    } else {
-                        editor.putString("TOKEN_JWT", "api_token");
+                        editor.putString("USER_ROLE", rptaAuth.getRol());
                     }
-                    // Forzar el rol seleccionado por el usuario en el login
-                    editor.putString("USER_ROLE", selectedRole);
                     editor.apply();
-
                     if (onTokenSaved != null) {
                         onTokenSaved.run();
                     }
@@ -105,14 +87,11 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Call<RptaAuth> call, @NonNull Throwable throwable) {
-                // En caso de fallo de red, usamos el rol seleccionado en el Spinner
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString("TOKEN_JWT", "offline_token");
-                editor.putString("USER_ROLE", selectedRole);
-                editor.apply();
-
-                if (onTokenSaved != null) {
-                    onTokenSaved.run();
+                binding.nextButton.setEnabled(true);
+                if (throwable.getMessage() != null) {
+                    binding.txtRptaJson.setText(throwable.getMessage());
+                } else {
+                    binding.txtRptaJson.setText("Error de conexión con el servidor");
                 }
             }
         });
