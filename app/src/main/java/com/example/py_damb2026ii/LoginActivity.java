@@ -76,7 +76,8 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = sharedPref.edit();
                     if (rptaAuth != null) {
                         editor.putString("TOKEN_JWT", rptaAuth.getAccess_token());
-                        editor.putString("USER_ROLE", rptaAuth.getRol());
+                        String role = rptaAuth.getRol();
+                        editor.putString("USER_ROLE", role != null ? role : "Solicitante");
                     }
                     editor.apply();
                     if (onTokenSaved != null) {
