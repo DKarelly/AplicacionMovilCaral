@@ -6,6 +6,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -64,7 +65,7 @@ public class IncidentListFragment extends Fragment {
             Snackbar.make(v, "Acceso Rápido: Gestión de Técnicos", Snackbar.LENGTH_SHORT).show()
         );
         binding.btnQuickReportes.setOnClickListener(v -> 
-            Snackbar.make(v, "Acceso Rápido: Reportes y Métricas", Snackbar.LENGTH_SHORT).show()
+            Navigation.findNavController(v).navigate(R.id.AdminReportsFragment)
         );
 
         obtenerIncidentesApi(() -> {

@@ -34,6 +34,13 @@
     </fragment>
 
     <fragment
+        android:id="@+id/AdminReportsFragment"
+        android:name="com.example.py_damb2026ii.AdminReportsFragment"
+        android:label="Reportes y Métricas"
+        tools:layout="@layout/fragment_admin_reports">
+    </fragment>
+
+    <fragment
         android:id="@+id/TecnicoHomeFragment"
         android:name="com.example.py_damb2026ii.TecnicoHomeFragment"
         android:label="Vista del Técnico"
