@@ -32,6 +32,13 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+
 public class AddIncidentFragment extends Fragment {
 
     private FragmentAddIncidentBinding binding;
@@ -97,47 +104,117 @@ public class AddIncidentFragment extends Fragment {
         binding.prioridadSpinner.setAdapter(prioAdapter);
     }
 
+
     private void cargarSucursales() {
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getString(R.string.dominioWS))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        JCPyAnyApi jcPyAnyApi = retrofit.create(JCPyAnyApi.class);
+
+        JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
+
         String token = sharedPref.getString("TOKEN_JWT", "");
 
-        Call<RptaObtenerSucursales> call = jcPyAnyApi.obtenerSucursales("JWT " + token);
-        call.enqueue(new Callback<RptaObtenerSucursales>() {
-            @Override
-            public void onResponse(@NonNull Call<RptaObtenerSucursales> call, @NonNull Response<RptaObtenerSucursales> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    RptaObtenerSucursales rpta = response.body();
-                    listaSucursales = rpta.getData();
-                    if (listaSucursales != null && !listaSucursales.isEmpty()) {
-                        ArrayAdapter<SucursalEntry> sucursalAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, listaSucursales);
-                        sucursalAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                        binding.sucursalSpinner.setAdapter(sucursalAdapter);
+        Call<RptaObtenerSucursales> call =
+                api.obtenerSucursales("JWT " + token);
 
-                        binding.sucursalSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        call.enqueue(new Callback<RptaObtenerSucursales>() {
+
+            @Override
+            public void onResponse(
+                    @NonNull Call<RptaObtenerSucursales> call,
+                    @NonNull Response<RptaObtenerSucursales> response) {
+
+                Log.d("USAT_APP", "HTTP sucursales: " + response.code());
+
+                if (!isAdded() || binding == null) return;
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    Snackbar.make(binding.getRoot(),
+                            "Error al consultar sucursales. HTTP " + response.code(),
+                            Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                RptaObtenerSucursales rpta = response.body();
+
+                Log.d("USAT_APP", "Código API: " + rpta.getCode());
+                Log.d("USAT_APP", "Mensaje: " + rpta.getMsge());
+
+                if (rpta.getCode() != 1) {
+                    Snackbar.make(binding.getRoot(),
+                            "Error: " + rpta.getMsge(),
+                            Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                listaSucursales = rpta.getData();
+
+                if (listaSucursales == null || listaSucursales.isEmpty()) {
+                    Snackbar.make(binding.getRoot(),
+                            "No hay sucursales registradas",
+                            Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                ArrayAdapter<SucursalEntry> adapter =
+                        new ArrayAdapter<>(
+                                requireContext(),
+                                android.R.layout.simple_spinner_item,
+                                listaSucursales
+                        );
+
+                adapter.setDropDownViewResource(
+                        android.R.layout.simple_spinner_dropdown_item
+                );
+
+                binding.sucursalSpinner.setAdapter(adapter);
+
+                sucursalSeleccionada = listaSucursales.get(0);
+
+                binding.sucursalSpinner.setOnItemSelectedListener(
+                        new AdapterView.OnItemSelectedListener() {
+
                             @Override
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                sucursalSeleccionada = listaSucursales.get(position);
+                            public void onItemSelected(
+                                    AdapterView<?> parent,
+                                    View view,
+                                    int position,
+                                    long id) {
+
+                                sucursalSeleccionada =
+                                        listaSucursales.get(position);
                             }
 
                             @Override
                             public void onNothingSelected(AdapterView<?> parent) {
                                 sucursalSeleccionada = null;
                             }
-                        });
-                    }
-                }
+                        }
+                );
+
+                Log.d("USAT_APP",
+                        "Sucursales cargadas: " + listaSucursales.size());
             }
 
             @Override
-            public void onFailure(@NonNull Call<RptaObtenerSucursales> call, @NonNull Throwable throwable) {
-                Log.d("USAT_APP", "Error cargando sucursales: " + throwable.getMessage());
+            public void onFailure(
+                    @NonNull Call<RptaObtenerSucursales> call,
+                    @NonNull Throwable throwable) {
+
+                Log.e("USAT_APP",
+                        "Error obteniendo sucursales", throwable);
+
+                if (isAdded() && binding != null) {
+                    Snackbar.make(binding.getRoot(),
+                            "No se pudieron cargar las sucursales",
+                            Snackbar.LENGTH_LONG).show();
+                }
             }
         });
     }
+
 
     private void insertarIncidente(Runnable transaccionOK) {
         Retrofit retrofit = new Retrofit.Builder()
@@ -147,30 +224,87 @@ public class AddIncidentFragment extends Fragment {
         JCPyAnyApi jcPyAnyApi = retrofit.create(JCPyAnyApi.class);
         String token = sharedPref.getString("TOKEN_JWT", "");
 
-        RequInsertarIncidente requ = new RequInsertarIncidente();
-        requ.setTitulo(binding.tituloEditText.getText() != null ? binding.tituloEditText.getText().toString() : "");
-        requ.setDescripcion(binding.descripcionEditText.getText() != null ? binding.descripcionEditText.getText().toString() : "");
 
-        // Categoría
-        String categoriaSelected = binding.categoriaSpinner.getSelectedItem() != null ? binding.categoriaSpinner.getSelectedItem().toString() : "Otro";
-        if ("Otro".equals(categoriaSelected)) {
-            categoriaSelected = binding.categoriaCustomEdit.getText() != null ? binding.categoriaCustomEdit.getText().toString() : "Otro";
+        String titulo = binding.tituloEditText.getText() != null
+                ? binding.tituloEditText.getText().toString().trim() : "";
+
+        String descripcion = binding.descripcionEditText.getText() != null
+                ? binding.descripcionEditText.getText().toString().trim() : "";
+
+// Validar campos obligatorios
+        if (titulo.isEmpty() || descripcion.isEmpty()) {
+            Snackbar.make(binding.getRoot(),
+                    "Complete el título y la descripción",
+                    Snackbar.LENGTH_LONG).show();
+            return;
         }
-        requ.setCategoria(categoriaSelected);
 
-        // Prioridad (limpiando emojis de semáforo si es necesario, o enviando Alta, Media, Baja)
-        String prioridadRaw = binding.prioridadSpinner.getSelectedItem() != null ? binding.prioridadSpinner.getSelectedItem().toString() : "🟡 Media";
-        String prioridadClean = "Media";
-        if (prioridadRaw.contains("Alta")) prioridadClean = "Alta";
-        else if (prioridadRaw.contains("Media")) prioridadClean = "Media";
-        else if (prioridadRaw.contains("Baja")) prioridadClean = "Baja";
-        requ.setPrioridad(prioridadClean);
+// Validar sucursal
+        if (sucursalSeleccionada == null) {
+            Snackbar.make(binding.getRoot(),
+                    "Seleccione una sucursal",
+                    Snackbar.LENGTH_LONG).show();
+            return;
+        }
 
-        // Sucursal ID
-        int idSucursal = sucursalSeleccionada != null ? sucursalSeleccionada.id : 1;
-        requ.setId_sucursal(idSucursal);
+// Obtener categoría
+        String categoria = binding.categoriaSpinner
+                .getSelectedItem().toString();
 
-        Call<RptaInsertarIncidente> call = jcPyAnyApi.insertarIncidente("JWT " + token, requ);
+// La BD solo admite Red, Hardware, Software,
+// Acceso, Impresora y Otro.
+        if ("Otro".equals(categoria)) {
+            String especificacion = binding.categoriaCustomEdit
+                    .getText() != null
+                    ? binding.categoriaCustomEdit.getText()
+                    .toString().trim() : "";
+
+            if (!especificacion.isEmpty()) {
+                descripcion += "\nTipo de problema: " + especificacion;
+            }
+        }
+
+// Obtener prioridad sin emojis
+        String prioridadRaw = binding.prioridadSpinner
+                .getSelectedItem().toString();
+
+        String prioridad = "Media";
+
+        if (prioridadRaw.contains("Alta")) {
+            prioridad = "Alta";
+        } else if (prioridadRaw.contains("Baja")) {
+            prioridad = "Baja";
+        }
+
+// Preparar campos form-data
+        Map<String, RequestBody> campos = new HashMap<>();
+
+        MediaType tipoTexto = MediaType.parse("text/plain");
+
+        campos.put("titulo",
+                RequestBody.create(tipoTexto, titulo));
+
+        campos.put("descripcion",
+                RequestBody.create(tipoTexto, descripcion));
+
+        campos.put("categoria",
+                RequestBody.create(tipoTexto, categoria));
+
+        campos.put("prioridad",
+                RequestBody.create(tipoTexto, prioridad));
+
+        campos.put("id_sucursal",
+                RequestBody.create(tipoTexto,
+                        String.valueOf(sucursalSeleccionada.id)));
+
+// Enviar al servidor
+        Call<RptaInsertarIncidente> call =
+                jcPyAnyApi.insertarIncidente(
+                        "JWT " + token,
+                        campos,
+                        Collections.emptyList()
+                );
+
         call.enqueue(new Callback<RptaInsertarIncidente>() {
             @Override
             public void onResponse(@NonNull Call<RptaInsertarIncidente> call, @NonNull Response<RptaInsertarIncidente> response) {

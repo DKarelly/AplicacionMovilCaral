@@ -11,6 +11,7 @@ import com.example.py_damb2026ii.model.RptaInsertarSucursal;
 import com.example.py_damb2026ii.model.RptaObtenerDiscos;
 import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.model.RptaObtenerSucursales;
+import com.example.py_damb2026ii.model.RptaDetalleIncidente;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -20,6 +21,15 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+
+
+import java.util.List;
+import java.util.Map;
+import okhttp3.RequestBody;
+import okhttp3.MultipartBody;
+import retrofit2.http.Multipart;
+import retrofit2.http.Part;
+import retrofit2.http.PartMap;
 
 public interface JCPyAnyApi {
 
@@ -37,9 +47,21 @@ public interface JCPyAnyApi {
     @GET("api_obtenerIncidentes")
     Call<RptaObtenerIncidentes> obtenerIncidentes(@Header("Authorization") String authorization);
 
+
+    @GET("api_obtenerIncidente/{p_id}")
+    Call<RptaDetalleIncidente> obtenerDetalleIncidente(
+            @Header("Authorization") String authorization,
+            @Path("p_id") int idIncidente
+    );
+
+    @Multipart
     @POST("api_registrarIncidente")
-    Call<RptaInsertarIncidente> insertarIncidente(@Header("Authorization") String authorization,
-                                                  @Body RequInsertarIncidente requInsertarIncidente);
+    Call<RptaInsertarIncidente> insertarIncidente(
+            @Header("Authorization") String authorization,
+            @PartMap Map<String, RequestBody> campos,
+            @Part List<MultipartBody.Part> fotos
+    );
+
 
     @PUT("api_asignarTecnico/{p_id}")
     Call<RptaInsertarIncidente> asignarTecnico(@Header("Authorization") String authorization,

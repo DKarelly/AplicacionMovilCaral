@@ -61,12 +61,19 @@
         tools:layout="@layout/fragment_incident_confirmation">
     </fragment>
 
+
     <fragment
         android:id="@+id/IncidentDetailFragment"
         android:name="com.example.py_damb2026ii.IncidentDetailFragment"
         android:label="Detalle del Incidente"
         tools:layout="@layout/fragment_incident_detail">
+
+        <argument
+            android:name="id_incidente"
+            app:argType="integer" />
+
     </fragment>
+
 
     <fragment
         android:id="@+id/AddBranchFragment"

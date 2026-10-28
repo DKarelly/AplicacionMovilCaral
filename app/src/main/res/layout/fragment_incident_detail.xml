@@ -37,7 +37,7 @@
                         android:id="@+id/detail_code"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="#INC-008"
+                        android:text="#INC-..."
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:textColor="@android:color/black" />
@@ -63,7 +63,7 @@
                         android:id="@+id/detail_status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="En proceso"
+                        android:text="Cargando..."
                         android:textSize="12sp"
                         android:textColor="@android:color/white"
                         android:background="@android:color/holo_blue_dark"
@@ -75,7 +75,7 @@
                     android:id="@+id/detail_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="No funciona mi laptop"
+                    android:text="Cargando incidente..."
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@android:color/black"
@@ -89,25 +89,28 @@
                     android:layout_marginBottom="12dp" />
 
                 <TextView
+                    android:id="@+id/detail_sucursal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sede: Lima"
+                    android:text="Sucursal: Cargando..."
                     android:textSize="14sp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginTop="4dp" />
 
                 <TextView
+                    android:id="@+id/detail_activo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Activo: Laptop Gerencia (QR-LIM-LAP-001)"
+                    android:text="Activo: Cargando..."
                     android:textSize="14sp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginTop="4dp" />
 
                 <TextView
+                    android:id="@+id/detail_fecha"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Fecha: 21/10/2026 10:24"
+                    android:text="Fecha: Cargando..."
                     android:textSize="14sp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginTop="4dp" />
@@ -139,9 +142,10 @@
                     android:textColor="@android:color/black" />
 
                 <TextView
+                    android:id="@+id/detail_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="La laptop no enciende, no muestra señal de carga."
+                    android:text="Cargando descripción..."
                     android:textSize="14sp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginTop="8dp" />
@@ -172,52 +176,28 @@
                     android:textSize="16sp"
                     android:textColor="@android:color/black" />
 
-                <!-- Timeline item 1 -->
+                <!-- Historial real: se llenará desde IncidentDetailFragment.java -->
                 <LinearLayout
+                    android:id="@+id/detail_historial_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="12dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Registrado"
-                        android:textStyle="bold"
-                        android:textColor="@android:color/black"
-                        android:textSize="14sp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="21/10/2026 10:24"
-                        android:textColor="@android:color/darker_gray"
-                        android:textSize="12sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-
-                <!-- Timeline item 2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="12dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="En proceso"
-                        android:textStyle="bold"
-                        android:textColor="@android:color/black"
-                        android:textSize="14sp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="21/10/2026 11:05"
-                        android:textColor="@android:color/darker_gray"
-                        android:textSize="12sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cambiar_estado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Cambiar estado"
+            android:visibility="gone"
+            app:cornerRadius="12dp" />
+
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
+
+

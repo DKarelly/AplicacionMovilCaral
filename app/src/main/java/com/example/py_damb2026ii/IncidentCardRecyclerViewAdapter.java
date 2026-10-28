@@ -8,7 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.py_damb2026ii.network.IncidentEntry;
-
+import android.os.Bundle;
+import androidx.navigation.Navigation;
 import java.util.List;
 
 public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<IncidentCardViewHolder> {
@@ -35,6 +36,17 @@ public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<Incide
             holder.incidentPriority.setText("Prioridad: " + incident.prioridad);
             holder.incidentStatus.setText("Estado: " + incident.estado);
             holder.incidentDate.setText(incident.fecha_registro);
+            holder.itemView.setOnClickListener(v -> {
+
+                Bundle args = new Bundle();
+                args.putInt("id_incidente", incident.id);
+
+                Navigation.findNavController(v).navigate(
+                        R.id.IncidentDetailFragment,
+                        args
+                );
+            });
+
         }
     }
 
