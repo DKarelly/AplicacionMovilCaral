@@ -34,6 +34,13 @@ import android.widget.EditText;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
+import com.example.py_damb2026ii.model.RptaInsertarIncidente;
 
 import com.example.py_damb2026ii.model.RptaInsertarIncidente;
 
@@ -68,6 +75,11 @@ public class IncidentDetailFragment extends Fragment {
         binding.btnCambiarEstado.setOnClickListener(
                 v -> mostrarDialogoCambioEstado()
         );
+
+        binding.btnAsignarTecnico.setOnClickListener(
+                v -> cargarTecnicos()
+        );
+
 
         if (idIncidente > 0) {
             binding.detailTitle.setText("Cargando incidente...");
@@ -151,6 +163,26 @@ public class IncidentDetailFragment extends Fragment {
 
         binding.detailSucursal.setText(
                 "Sucursal: " + incidente.sucursal);
+
+// Mostrar técnico asignado
+        String nombreTecnico = incidente.tecnico;
+
+        if (nombreTecnico == null || nombreTecnico.isEmpty()) {
+            binding.detailTecnico.setText("Técnico: Sin asignar");
+        } else {
+            binding.detailTecnico.setText(
+                    "Técnico: " + nombreTecnico);
+        }
+
+// Mostrar asignación solo al Administrador
+        String rolUsuario = sharedPref.getString("USER_ROLE", "");
+
+        binding.btnAsignarTecnico.setVisibility(
+                "Administrador".equalsIgnoreCase(rolUsuario)
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
 
         if (incidente.id_activo != null) {
             binding.detailActivo.setText(
@@ -410,6 +442,224 @@ public class IncidentDetailFragment extends Fragment {
             }
         });
     }
+
+
+    private void cargarTecnicos() {
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
+
+        String token = sharedPref.getString("TOKEN_JWT", "");
+
+        Call<RptaObtenerUsuarios> call =
+                api.buscarUsuariosPorRol(
+                        "JWT " + token,
+                        "Técnico"
+                );
+
+        call.enqueue(new Callback<RptaObtenerUsuarios>() {
+
+            @Override
+            public void onResponse(
+                    @NonNull Call<RptaObtenerUsuarios> call,
+                    @NonNull Response<RptaObtenerUsuarios> response) {
+
+                if (!isAdded() || binding == null) return;
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    Snackbar.make(binding.getRoot(),
+                            "Error HTTP: " + response.code(),
+                            Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                RptaObtenerUsuarios rpta = response.body();
+
+                if (rpta.getCode() != 1 || rpta.getData() == null) {
+                    Snackbar.make(binding.getRoot(),
+                            rpta.getMsge() != null
+                                    ? rpta.getMsge()
+                                    : "Error al obtener técnicos",
+                            Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                List<RptaObtenerUsuarios.Usuario> tecnicosActivos =
+                        new ArrayList<>();
+
+                for (RptaObtenerUsuarios.Usuario usuario
+                        : rpta.getData()) {
+
+                    if (usuario.isActivo()) {
+                        tecnicosActivos.add(usuario);
+                    }
+                }
+
+                if (tecnicosActivos.isEmpty()) {
+                    Snackbar.make(binding.getRoot(),
+                            "No hay técnicos activos registrados",
+                            Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                mostrarDialogoTecnicos(tecnicosActivos);
+            }
+
+            @Override
+            public void onFailure(
+                    @NonNull Call<RptaObtenerUsuarios> call,
+                    @NonNull Throwable throwable) {
+
+                if (!isAdded() || binding == null) return;
+
+                Snackbar.make(binding.getRoot(),
+                        "Error de conexión: " + throwable.getMessage(),
+                        Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
+
+    private void mostrarDialogoTecnicos(
+            List<RptaObtenerUsuarios.Usuario> tecnicos) {
+
+        String[] nombres = new String[tecnicos.size()];
+
+        for (int i = 0; i < tecnicos.size(); i++) {
+            nombres[i] = tecnicos.get(i).getNombre();
+        }
+
+        final int[] seleccionado = {-1};
+
+        AlertDialog dialogo = new AlertDialog.Builder(requireContext())
+                .setTitle("Seleccionar técnico")
+                .setSingleChoiceItems(nombres, -1,
+                        (dialog, posicion) -> {
+                            seleccionado[0] = posicion;
+                        })
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Asignar", null)
+                .create();
+
+        dialogo.show();
+
+        dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> {
+
+                    if (seleccionado[0] == -1) {
+                        Snackbar.make(binding.getRoot(),
+                                "Seleccione un técnico",
+                                Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    RptaObtenerUsuarios.Usuario tecnico =
+                            tecnicos.get(seleccionado[0]);
+
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Confirmar asignación")
+                            .setMessage(
+                                    "¿Asignar este incidente a "
+                                            + tecnico.getNombre() + "?")
+                            .setNegativeButton("Cancelar", null)
+                            .setPositiveButton("Confirmar",
+                                    (confirmacion, opcion) -> {
+                                        dialogo.dismiss();
+                                        asignarTecnico(tecnico.getId());
+                                    })
+                            .show();
+                });
+    }
+
+
+    private void asignarTecnico(int idTecnico) {
+
+        if (idIncidenteActual <= 0) {
+            Snackbar.make(binding.getRoot(),
+                    "No se ha seleccionado un incidente",
+                    Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
+
+        String token = sharedPref.getString("TOKEN_JWT", "");
+
+        Map<String, Integer> datos = new HashMap<>();
+        datos.put("id_tecnico", idTecnico);
+
+        Call<RptaInsertarIncidente> call =
+                api.asignarTecnico(
+                        "JWT " + token,
+                        idIncidenteActual,
+                        datos
+                );
+
+        binding.btnAsignarTecnico.setEnabled(false);
+
+        call.enqueue(new Callback<RptaInsertarIncidente>() {
+
+            @Override
+            public void onResponse(
+                    @NonNull Call<RptaInsertarIncidente> call,
+                    @NonNull Response<RptaInsertarIncidente> response) {
+
+                if (!isAdded() || binding == null) return;
+
+                binding.btnAsignarTecnico.setEnabled(true);
+
+                RptaInsertarIncidente rpta = response.body();
+
+                if (response.isSuccessful()
+                        && rpta != null
+                        && rpta.getCode() == 1) {
+
+                    Snackbar.make(binding.getRoot(),
+                            "Técnico asignado correctamente",
+                            Snackbar.LENGTH_LONG).show();
+
+                    // Recargar el detalle desde MySQL
+                    cargarDetalle(idIncidenteActual);
+
+                } else {
+
+                    String mensaje = rpta != null
+                            ? rpta.getMsge()
+                            : "Error HTTP: " + response.code();
+
+                    Snackbar.make(binding.getRoot(),
+                            mensaje != null
+                                    ? mensaje
+                                    : "No se pudo asignar el técnico",
+                            Snackbar.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    @NonNull Call<RptaInsertarIncidente> call,
+                    @NonNull Throwable throwable) {
+
+                if (!isAdded() || binding == null) return;
+
+                binding.btnAsignarTecnico.setEnabled(true);
+
+                Snackbar.make(binding.getRoot(),
+                        "Error de conexión: " + throwable.getMessage(),
+                        Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
 
 
 

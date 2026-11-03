@@ -12,6 +12,7 @@ import com.example.py_damb2026ii.model.RptaObtenerDiscos;
 import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.model.RptaObtenerSucursales;
 import com.example.py_damb2026ii.model.RptaDetalleIncidente;
+import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -53,6 +54,14 @@ public interface JCPyAnyApi {
             @Header("Authorization") String authorization,
             @Path("p_id") int idIncidente
     );
+
+    // Buscar usuarios por rol
+    @GET("api_buscarUsuarioRol/{p_rol}")
+    Call<RptaObtenerUsuarios> buscarUsuariosPorRol(
+            @Header("Authorization") String authorization,
+            @Path("p_rol") String rol
+    );
+
 
     @Multipart
     @POST("api_registrarIncidente")

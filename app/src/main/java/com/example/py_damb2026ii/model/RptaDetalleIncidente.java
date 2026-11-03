@@ -38,6 +38,8 @@ public class RptaDetalleIncidente {
         public String tecnico;
         public String fecha_registro;
         public Integer id_activo;
+        public Integer id_tecnico;
+
     }
 
     public static class CambioEstado {
