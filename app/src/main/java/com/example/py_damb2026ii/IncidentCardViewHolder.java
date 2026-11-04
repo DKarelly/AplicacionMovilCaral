@@ -13,6 +13,10 @@ public class IncidentCardViewHolder extends RecyclerView.ViewHolder {
     public TextView incidentPriority;
     public TextView incidentStatus;
     public TextView incidentDate;
+    public TextView incidentCode;
+    public TextView incidentSla;
+    public TextView incidentTecnico;
+    public View incidentSlaBar;
 
     public IncidentCardViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -22,5 +26,9 @@ public class IncidentCardViewHolder extends RecyclerView.ViewHolder {
         incidentPriority = itemView.findViewById(R.id.incident_priority);
         incidentStatus = itemView.findViewById(R.id.incident_status);
         incidentDate = itemView.findViewById(R.id.incident_date);
+        incidentCode = itemView.findViewById(R.id.incident_code);
+        incidentSla = itemView.findViewById(R.id.incident_sla);
+        incidentTecnico = itemView.findViewById(R.id.incident_tecnico);
+        incidentSlaBar = itemView.findViewById(R.id.incident_sla_bar);
     }
 }

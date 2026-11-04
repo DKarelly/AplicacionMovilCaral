@@ -10,6 +10,9 @@ public class IncidentEntry {
     public final int id_sucursal;
     public final String fecha_registro;
 
+    public String sucursal;
+    public String tecnico;
+
     public IncidentEntry(int id, String titulo, String descripcion, String categoria, String prioridad, String estado, int id_sucursal, String fecha_registro) {
         this.id = id;
         this.titulo = titulo;

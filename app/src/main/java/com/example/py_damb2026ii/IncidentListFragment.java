@@ -40,9 +40,10 @@ public class IncidentListFragment extends Fragment {
     private FragmentIncidentListBinding binding;
     private SharedPreferences sharedPref;
     private List<IncidentEntry> listaIncidentes;
+    private IncidentCardRecyclerViewAdapter adapter;
 
     public IncidentListFragment() {
-        // Required empty public constructor
+
     }
 
     @Override
@@ -58,25 +59,61 @@ public class IncidentListFragment extends Fragment {
             binding.adminQuickAccessLayout.setVisibility(View.GONE);
         }
 
-        binding.btnQuickIncidentes.setOnClickListener(v -> 
-            Snackbar.make(v, "Acceso Rápido: Todos los Incidentes", Snackbar.LENGTH_SHORT).show()
+        binding.btnQuickIncidentes.setOnClickListener(v ->
+                Snackbar.make(v, "Acceso Rápido: Todos los Incidentes", Snackbar.LENGTH_SHORT).show()
         );
-        binding.btnQuickTecnicos.setOnClickListener(v -> 
-            Snackbar.make(v, "Acceso Rápido: Gestión de Técnicos", Snackbar.LENGTH_SHORT).show()
+        binding.btnQuickTecnicos.setOnClickListener(v ->
+                Snackbar.make(v, "Acceso Rápido: Gestión de Técnicos", Snackbar.LENGTH_SHORT).show()
         );
-        binding.btnQuickReportes.setOnClickListener(v -> 
-            Navigation.findNavController(v).navigate(R.id.AdminReportsFragment)
+        binding.btnQuickReportes.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.AdminReportsFragment)
         );
 
         obtenerIncidentesApi(() -> {
+            if (binding == null) return; // el usuario salió de la pantalla antes de que respondiera la API
             RecyclerView recyclerView = binding.recyclerViewIncidents;
-            recyclerView.setHasFixedSize(true);
             recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-            IncidentCardRecyclerViewAdapter adapter = new IncidentCardRecyclerViewAdapter(listaIncidentes);
+            adapter = new IncidentCardRecyclerViewAdapter(listaIncidentes);
             recyclerView.setAdapter(adapter);
+            aplicarFiltros();
         });
 
+        // Cada vez que cambia un chip se vuelve a filtrar la lista
+        binding.chipGroupEstado.setOnCheckedStateChangeListener((group, checkedIds) -> aplicarFiltros());
+        binding.chipGroupPrioridad.setOnCheckedStateChangeListener((group, checkedIds) -> aplicarFiltros());
+
         return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
+    /* Lee los chips seleccionados y filtra el adapter. */
+    private void aplicarFiltros() {
+        if (adapter == null || binding == null) return;
+
+        String estado = null; // null = Todos
+        int idEstado = binding.chipGroupEstado.getCheckedChipId();
+        if (idEstado == R.id.chip_estado_abierto) estado = "Abierto";
+        else if (idEstado == R.id.chip_estado_proceso) estado = "En proceso";
+        else if (idEstado == R.id.chip_estado_resuelto) estado = "Resuelto";
+        else if (idEstado == R.id.chip_estado_cerrado) estado = "Cerrado";
+
+        String prioridad = null; // null = Todas
+        int idPrioridad = binding.chipGroupPrioridad.getCheckedChipId();
+        if (idPrioridad == R.id.chip_prioridad_alta) prioridad = "Alta";
+        else if (idPrioridad == R.id.chip_prioridad_media) prioridad = "Media";
+        else if (idPrioridad == R.id.chip_prioridad_baja) prioridad = "Baja";
+
+        adapter.filtrar(estado, prioridad);
+
+        // Estado vacío: mensaje si no queda ningún incidente
+        boolean vacia = adapter.getItemCount() == 0;
+        binding.txtListaVacia.setVisibility(vacia ? View.VISIBLE : View.GONE);
+        binding.recyclerViewIncidents.setVisibility(vacia ? View.GONE : View.VISIBLE);
     }
 
     private void obtenerIncidentesApi(Runnable listaCargada) {
