@@ -1,4 +1,3 @@
-
 package com.example.py_damb2026ii.model;
 
 import java.util.List;
@@ -27,7 +26,9 @@ public class RptaObtenerUsuarios {
         private String nombre;
         private String correo;
         private String rol;
-        private int activo;
+        private Object activo;
+        private Integer id_sucursal;
+        private String nombre_sucursal;
 
         public int getId() {
             return id;
@@ -37,8 +38,35 @@ public class RptaObtenerUsuarios {
             return nombre;
         }
 
+        public String getCorreo() {
+            return correo;
+        }
+
+        public String getRol() {
+            return rol;
+        }
+
+        public Integer getIdSucursal() {
+            return id_sucursal;
+        }
+
+        public String getNombreSucursal() {
+            return nombre_sucursal;
+        }
+
         public boolean isActivo() {
-            return activo == 1;
+
+            if (activo instanceof Boolean) {
+                return (Boolean) activo;
+            }
+
+            if (activo instanceof Number) {
+                return ((Number) activo).intValue() == 1;
+            }
+
+            return activo != null &&
+                    ("1".equals(String.valueOf(activo))
+                            || "true".equalsIgnoreCase(String.valueOf(activo)));
         }
     }
 }

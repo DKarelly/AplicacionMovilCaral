@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="2dp"
+    app:strokeColor="#D9E6EE"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/collaborator_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nombre del colaborador"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/collaborator_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Activo"
+                android:textSize="11sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/collaborator_role"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/bg_badge"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:text="Técnico"
+            android:textColor="@color/colorPrimary"
+            android:textSize="11sp"/>
+
+        <TextView
+            android:id="@+id/collaborator_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="correo@empresa.com"
+            android:textColor="@color/textSecondary"
+            android:textSize="12sp"/>
+
+        <TextView
+            android:id="@+id/collaborator_branch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:text="Sucursal: Sede Central"
+            android:textColor="@color/textSecondary"
+            android:textSize="12sp"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

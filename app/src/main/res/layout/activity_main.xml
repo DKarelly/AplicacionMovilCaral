@@ -109,6 +109,35 @@
                 android:textColor="@color/textSecondary"
                 android:layout_marginTop="5dp"/>
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_branches"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:src="@drawable/ic_settings_simple"
+                android:contentDescription="Gestión"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gestión"
+                android:textSize="11sp"
+                android:textColor="@color/textSecondary"
+                android:layout_marginTop="5dp"/>
+
+        </LinearLayout>
+
+
         <LinearLayout
             android:id="@+id/nav_profile"
             android:layout_width="0dp"

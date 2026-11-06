@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/productGridBackgroundColor">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nuevo colaborador"
+            android:textSize="23sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-black"
+            android:textColor="@color/textPrimary"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Registra un técnico o solicitante de tu empresa."
+            android:textSize="13sp"
+            android:textColor="@color/textSecondary"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_collaborator_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:hint="Nombre completo">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_collaborator_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:maxLines="1"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_collaborator_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Correo electrónico">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_collaborator_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:maxLines="1"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_collaborator_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Contraseña inicial"
+            app:endIconMode="password_toggle">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_collaborator_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:maxLines="1"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Rol del colaborador"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:textSize="13sp"/>
+
+        <Spinner
+            android:id="@+id/spinner_role"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_soft_card"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Sucursal asignada"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:textSize="13sp"/>
+
+        <Spinner
+            android:id="@+id/spinner_branch"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_soft_card"/>
+
+        <TextView
+            android:id="@+id/txt_no_branches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Primero debes registrar una sucursal."
+            android:textColor="#C96F68"
+            android:textSize="12sp"
+            android:visibility="gone"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_create_branch"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Registrar nueva sucursal"
+            android:textAllCaps="false"
+            app:icon="@drawable/ic_plus_simple"
+            android:textColor="@color/colorPrimary"
+            app:iconTint="@color/colorPrimary"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_collaborator"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="24dp"
+            android:text="Registrar colaborador"
+            android:textAllCaps="false"
+            app:cornerRadius="15dp"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel_collaborator"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cancelar"
+            android:textAllCaps="false"
+            android:textColor="@color/colorPrimary"/>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

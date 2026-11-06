@@ -40,70 +40,155 @@ public class AddBranchFragment extends Fragment {
         sharedPref = requireActivity().getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
         binding = FragmentAddBranchBinding.inflate(inflater, container, false);
 
-        binding.addBranchButton.setOnClickListener(v -> insertarSucursal(() -> {
-            Snackbar.make(binding.getRoot(), "Sucursal registrada correctamente", Snackbar.LENGTH_LONG)
-                    .setAnchorView(requireActivity().findViewById(R.id.fab))
-                    .setAction("Action", null).show();
-            Navigation.findNavController(v).popBackStack();
-        }));
+        binding.addBranchButton.setOnClickListener(v -> insertarSucursal());
 
         binding.cancelAddBranchButton.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
         return binding.getRoot();
     }
 
-    private void insertarSucursal(Runnable transaccionOK) {
+
+    private void insertarSucursal() {
+
+        binding.nombreSucursalInput.setError(null);
+        binding.direccionSucursalInput.setError(null);
+        binding.latitudSucursalInput.setError(null);
+        binding.longitudSucursalInput.setError(null);
+
+        String nombre = binding.nombreSucursalEdit.getText().toString().trim();
+        String direccion = binding.direccionSucursalEdit.getText().toString().trim();
+        String latitudTexto = binding.latitudSucursalEdit.getText().toString().trim();
+        String longitudTexto = binding.longitudSucursalEdit.getText().toString().trim();
+
+        if (nombre.isEmpty()) {
+            binding.nombreSucursalInput.setError("Ingrese el nombre");
+            return;
+        }
+
+        if (direccion.isEmpty()) {
+            binding.direccionSucursalInput.setError("Ingrese la dirección");
+            return;
+        }
+
+        double latitud;
+        double longitud;
+
+        try {
+            if (latitudTexto.isEmpty() || longitudTexto.isEmpty()) {
+                throw new NumberFormatException();
+            }
+
+            latitud = Double.parseDouble(latitudTexto);
+            longitud = Double.parseDouble(longitudTexto);
+
+            if (latitud < -90 || latitud > 90) {
+                binding.latitudSucursalInput.setError("Latitud no válida");
+                return;
+            }
+
+            if (longitud < -180 || longitud > 180) {
+                binding.longitudSucursalInput.setError("Longitud no válida");
+                return;
+            }
+
+        } catch (NumberFormatException e) {
+
+            binding.latitudSucursalInput.setError(
+                    "Ingrese coordenadas numéricas válidas"
+            );
+
+            return;
+        }
+
+        String token = sharedPref.getString("TOKEN_JWT", "");
+
+        if (token.isEmpty()) {
+            Snackbar.make(binding.getRoot(),
+                    "La sesión ha expirado",
+                    Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        RequInsertarSucursal requ = new RequInsertarSucursal();
+
+        requ.setNombre(nombre);
+        requ.setDireccion(direccion);
+        requ.setLatitud(latitud);
+        requ.setLongitud(longitud);
+
+        // NO enviar id_empresa.
+        // Flask obtiene la empresa desde el usuario autenticado.
+
+        binding.addBranchButton.setEnabled(false);
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getString(R.string.dominioWS))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        JCPyAnyApi jcPyAnyApi = retrofit.create(JCPyAnyApi.class);
-        String token = sharedPref.getString("TOKEN_JWT", "");
 
-        RequInsertarSucursal requ = new RequInsertarSucursal();
-        requ.setNombre(binding.nombreSucursalEdit.getText() != null ? binding.nombreSucursalEdit.getText().toString() : "");
-        requ.setDireccion(binding.direccionSucursalEdit.getText() != null ? binding.direccionSucursalEdit.getText().toString() : "");
+        JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
 
-        double lat = 0.0;
-        try {
-            String latStr = binding.latitudSucursalEdit.getText() != null ? binding.latitudSucursalEdit.getText().toString() : "0";
-            lat = Double.parseDouble(latStr);
-        } catch (NumberFormatException ignored) {}
-        requ.setLatitud(lat);
+        Call<RptaInsertarSucursal> call =
+                api.insertarSucursal("JWT " + token, requ);
 
-        double lon = 0.0;
-        try {
-            String lonStr = binding.longitudSucursalEdit.getText() != null ? binding.longitudSucursalEdit.getText().toString() : "0";
-            lon = Double.parseDouble(lonStr);
-        } catch (NumberFormatException ignored) {}
-        requ.setLongitud(lon);
-
-        requ.setId_empresa(1);
-
-        Call<RptaInsertarSucursal> call = jcPyAnyApi.insertarSucursal("JWT " + token, requ);
         call.enqueue(new Callback<RptaInsertarSucursal>() {
+
             @Override
-            public void onResponse(@NonNull Call<RptaInsertarSucursal> call, @NonNull Response<RptaInsertarSucursal> response) {
-                if (!response.isSuccessful()) {
-                    Log.d("USAT_APP", "Código error: " + response.code());
+            public void onResponse(
+                    @NonNull Call<RptaInsertarSucursal> call,
+                    @NonNull Response<RptaInsertarSucursal> response) {
+
+                if (!isAdded() || binding == null) return;
+
+                binding.addBranchButton.setEnabled(true);
+
+                RptaInsertarSucursal rpta = response.body();
+
+                if (response.isSuccessful()
+                        && rpta != null
+                        && rpta.getCode() == 1) {
+
+                    Snackbar.make(
+                            binding.getRoot(),
+                            "Sucursal registrada correctamente",
+                            Snackbar.LENGTH_LONG
+                    ).show();
+
+                    Navigation.findNavController(
+                            binding.getRoot()
+                    ).popBackStack();
+
                 } else {
-                    RptaInsertarSucursal rpta = response.body();
-                    if (rpta != null && rpta.getCode() == 1) {
-                        if (transaccionOK != null) {
-                            transaccionOK.run();
-                        }
-                    } else if (rpta != null) {
-                        Log.d("USAT_APP", "Mensaje: " + rpta.getMsge());
-                    }
+
+                    String mensaje = rpta != null
+                            ? rpta.getMsge()
+                            : "No se pudo registrar la sucursal. Código HTTP: "
+                              + response.code();
+
+                    Snackbar.make(
+                            binding.getRoot(),
+                            mensaje,
+                            Snackbar.LENGTH_LONG
+                    ).show();
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<RptaInsertarSucursal> call, @NonNull Throwable throwable) {
-                if (throwable.getMessage() != null) {
-                    Log.d("USAT_APP", throwable.getMessage());
-                }
+            public void onFailure(
+                    @NonNull Call<RptaInsertarSucursal> call,
+                    @NonNull Throwable throwable) {
+
+                if (!isAdded() || binding == null) return;
+
+                binding.addBranchButton.setEnabled(true);
+
+                Snackbar.make(
+                        binding.getRoot(),
+                        "Error de conexión: " + throwable.getMessage(),
+                        Snackbar.LENGTH_LONG
+                ).show();
             }
         });
     }
+
 }
