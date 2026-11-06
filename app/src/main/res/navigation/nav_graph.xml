@@ -81,6 +81,11 @@
         android:label="Registrar Sucursal"
         tools:layout="@layout/fragment_add_branch">
     </fragment>
+    <fragment
+        android:id="@+id/AddCollaboratorFragment"
+        android:name="com.example.py_damb2026ii.AddCollaboratorFragment"
+        android:label="Nuevo colaborador"
+        tools:layout="@layout/fragment_add_collaborator" />
 
     <fragment
         android:id="@+id/BranchListFragment"

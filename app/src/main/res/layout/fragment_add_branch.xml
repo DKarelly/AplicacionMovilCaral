@@ -1,103 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddBranchFragment">
+    android:fillViewport="true"
+    android:background="@color/productGridBackgroundColor">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:padding="22dp">
 
         <TextView
-            android:id="@+id/lblAgregarSucursal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Registrar Sucursal"
-            android:textSize="18sp"
+            android:text="Registrar sucursal"
+            android:textSize="23sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:fontFamily="sans-serif-black"
+            android:textColor="@color/textPrimary"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Añade una nueva sede a tu empresa."
+            android:textSize="13sp"
+            android:textColor="@color/textSecondary"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/nombre_sucursal_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre de Sucursal"
-            app:layout_constraintTop_toBottomOf="@+id/lblAgregarSucursal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="22dp"
+            android:hint="Nombre de sucursal">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/nombre_sucursal_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="textCapWords"
                 android:maxLines="1"/>
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/direccion_sucursal_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Dirección"
-            app:layout_constraintTop_toBottomOf="@+id/nombre_sucursal_input"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="14dp"
+            android:hint="Dirección">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/direccion_sucursal_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="textCapSentences"
                 android:maxLines="1"/>
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/latitud_sucursal_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Latitud (ej: -6.7713)"
-            app:layout_constraintTop_toBottomOf="@+id/direccion_sucursal_input"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="14dp"
+            android:hint="Latitud (ej: -6.7713)">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/latitud_sucursal_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal|numberSigned"
                 android:maxLines="1"/>
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/longitud_sucursal_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Longitud (ej: -79.8409)"
-            app:layout_constraintTop_toBottomOf="@+id/latitud_sucursal_input"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="14dp"
+            android:hint="Longitud (ej: -79.8409)">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/longitud_sucursal_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal|numberSigned"
                 android:maxLines="1"/>
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/add_branch_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Guardar Sucursal"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/longitud_sucursal_input"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            android:layout_height="50dp"
+            android:layout_marginTop="24dp"
+            android:text="Guardar sucursal"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:cornerRadius="16dp"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/cancel_add_branch_button"
@@ -105,9 +112,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Cancelar"
-            app:layout_constraintTop_toBottomOf="@+id/add_branch_button"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            android:textAllCaps="false"
+            android:textColor="@color/colorPrimary"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+
 </androidx.core.widget.NestedScrollView>

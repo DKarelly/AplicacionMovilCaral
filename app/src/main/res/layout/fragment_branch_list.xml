@@ -1,25 +1,196 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BranchListFragment">
+    android:background="@color/productGridBackgroundColor">
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="56dp"
-        android:background="@color/productGridBackgroundColor"
-        android:paddingStart="@dimen/usat_product_grid_spacing"
-        android:paddingEnd="@dimen/usat_product_grid_spacing"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:orientation="vertical"
+        android:paddingTop="20dp">
+
+        <!-- ENCABEZADO -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="22dp">
+
+            <TextView
+                android:id="@+id/txt_gestion_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gestión"
+                android:textSize="23sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-black"
+                android:textColor="@color/textPrimary"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="Administra las sucursales y colaboradores de tu empresa."
+                android:textSize="13sp"
+                android:textColor="@color/textSecondary"/>
+
+        </LinearLayout>
+
+        <!-- BUSCADOR -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="16dp"
+            android:paddingHorizontal="14dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_search"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search_simple"/>
+
+            <EditText
+                android:id="@+id/input_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:background="@null"
+                android:hint="Buscar sucursal o colaborador"
+                android:singleLine="true"
+                android:textSize="13sp"
+                android:textColor="@color/textPrimary"
+                android:textColorHint="@color/textSecondary"/>
+
+        </LinearLayout>
+
+        <!-- PESTAÑAS -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="15dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_tab_branches"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:text="Sucursales"
+                android:textAllCaps="false"
+                app:cornerRadius="15dp"
+                app:strokeColor="#D9E6EE"
+                app:strokeWidth="1dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_tab_collaborators"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Colaboradores"
+                android:textAllCaps="false"
+                app:cornerRadius="15dp"
+                app:strokeColor="#D9E6EE"
+                app:strokeWidth="1dp"/>
+
+        </LinearLayout>
+
+        <!-- AGREGAR SUCURSAL -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_branch"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="13dp"
+            android:text="Agregar sucursal"
+            android:textAllCaps="false"
+            app:cornerRadius="15dp"
+            app:icon="@drawable/ic_plus_simple"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:iconTint="@android:color/white"/>
+
+        <!-- AGREGAR COLABORADOR -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_collaborator"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="13dp"
+            android:text="Agregar colaborador"
+            android:textAllCaps="false"
+            android:visibility="gone"
+            app:cornerRadius="15dp"
+            app:icon="@drawable/ic_plus_simple"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:iconTint="@android:color/white"/>
+
+        <!-- MENSAJES -->
+
+        <TextView
+            android:id="@+id/txt_empty_branches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="20dp"
+            android:text="Cargando sucursales..."
+            android:textColor="@color/textSecondary"
+            android:textSize="13sp"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/txt_empty_collaborators"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="20dp"
+            android:text="Cargando colaboradores..."
+            android:textColor="@color/textSecondary"
+            android:textSize="13sp"
+            android:visibility="gone"/>
+
+        <!-- LISTA DE SUCURSALES -->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_branches"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="15dp"
+            android:clipToPadding="false"/>
 
-    </androidx.core.widget.NestedScrollView>
+        <!-- LISTA DE COLABORADORES -->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_collaborators"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="15dp"
+            android:clipToPadding="false"
+            android:visibility="gone"/>
+
+    </LinearLayout>
 
 </FrameLayout>

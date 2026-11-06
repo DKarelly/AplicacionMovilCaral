@@ -46,6 +46,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.network.IncidentEntry;
+import android.widget.FrameLayout;
+import androidx.navigation.fragment.NavHostFragment;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
@@ -77,6 +79,33 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         sharedPref = requireActivity().getSharedPreferences(
                 "USAT_SP", Context.MODE_PRIVATE
         );
+
+        // SEGURIDAD: el mapa es exclusivo del administrador.
+        String rolActual = sharedPref.getString(
+                "USER_ROLE", ""
+        ).trim();
+
+        if (!"Administrador".equalsIgnoreCase(rolActual)) {
+
+            FrameLayout pantallaBloqueada =
+                    new FrameLayout(requireContext());
+
+            pantallaBloqueada.post(() -> {
+
+                if (!isAdded()) return;
+
+                Snackbar.make(
+                        pantallaBloqueada,
+                        "No tienes permiso para acceder al mapa.",
+                        Snackbar.LENGTH_SHORT
+                ).show();
+
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.IncidentListFragment);
+            });
+
+            return pantallaBloqueada;
+        }
 
         binding = FragmentMapBinding.inflate(inflater, container, false);
 

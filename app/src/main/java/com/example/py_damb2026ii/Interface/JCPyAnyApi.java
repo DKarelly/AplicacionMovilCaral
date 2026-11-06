@@ -13,6 +13,8 @@ import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.model.RptaObtenerSucursales;
 import com.example.py_damb2026ii.model.RptaDetalleIncidente;
 import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
+import com.example.py_damb2026ii.model.RequInsertarUsuario;
+import com.example.py_damb2026ii.model.RptaInsertarUsuario;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -102,5 +104,18 @@ public interface JCPyAnyApi {
     @DELETE("api_eliminarSucursal/{p_id}")
     Call<RptaInsertarSucursal> eliminarSucursal(@Header("Authorization") String authorization,
                                                 @Path("p_id") int idSucursal);
+
+    // GESTIÓN DE COLABORADORES
+
+    @GET("api_listarUsuarios")
+    Call<RptaObtenerUsuarios> obtenerUsuarios(
+            @Header("Authorization") String authorization
+    );
+
+    @POST("api_insertarUsuario")
+    Call<RptaInsertarUsuario> insertarUsuario(
+            @Header("Authorization") String authorization,
+            @Body RequInsertarUsuario usuario
+    );
 
 }
