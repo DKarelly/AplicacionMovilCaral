@@ -33,6 +33,7 @@ import okhttp3.MultipartBody;
 import retrofit2.http.Multipart;
 import retrofit2.http.Part;
 import retrofit2.http.PartMap;
+import com.example.py_damb2026ii.model.RptaObtenerUbicacionesTecnicos;
 
 public interface JCPyAnyApi {
 
@@ -88,6 +89,19 @@ public interface JCPyAnyApi {
     Call<RptaInsertarIncidente> cambiarEstadoIncidente(@Header("Authorization") String authorization,
                                                        @Path("p_id") int idIncidente,
                                                        @Body java.util.Map<String, String> body);
+
+    // UBICACIÓN DEL TÉCNICO
+
+    @POST("api_actualizarUbicacionTecnico")
+    Call<RptaInsertarIncidente> actualizarUbicacionTecnico(
+            @Header("Authorization") String authorization,
+            @Body Map<String, Object> body
+    );
+
+    @GET("api_ubicacionesTecnicos")
+    Call<RptaObtenerUbicacionesTecnicos> obtenerUbicacionesTecnicos(
+            @Header("Authorization") String authorization
+    );
 
     // Sucursales (según Flask API)
     @GET("api_buscarSucursalNombre/{p_nombre}")

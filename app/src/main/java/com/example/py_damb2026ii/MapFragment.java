@@ -48,6 +48,12 @@ import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.network.IncidentEntry;
 import android.widget.FrameLayout;
 import androidx.navigation.fragment.NavHostFragment;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import com.example.py_damb2026ii.model.RptaObtenerUbicacionesTecnicos;
+import com.example.py_damb2026ii.network.UbicacionTecnicoEntry;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
@@ -70,6 +76,31 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public MapFragment() {
         // Constructor vacío
     }
+
+    // ==========================================
+// UBICACIONES DE TECNICOS
+// ==========================================
+
+    private final List<UbicacionTecnicoEntry> listaUbicacionesTecnicos =
+            new ArrayList<>();
+
+    private final Map<Marker, UbicacionTecnicoEntry> tecnicoPorMarcador =
+            new HashMap<>();
+
+    private UbicacionTecnicoEntry tecnicoSeleccionado;
+    private Marker marcadorTecnicoSeleccionado;
+
+    // Actualizacion automatica cada 15 segundos
+    private final Handler handlerUbicaciones =
+            new Handler(Looper.getMainLooper());
+
+    private final Runnable actualizacionUbicaciones = new Runnable() {
+        @Override
+        public void run() {
+            cargarUbicacionesTecnicos();
+            handlerUbicaciones.postDelayed(this, 15000);
+        }
+    };
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -173,10 +204,21 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             mostrarMensaje("No se pudo aplicar el estilo del mapa.");
         }
 
-        // Seleccionar sucursal al tocar un marcador
+        // Seleccionar sucursal o tecnico al tocar un marcador
         mMap.setOnMarkerClickListener(marker -> {
 
-            SucursalEntry sucursal = sucursalPorMarcador.get(marker);
+            // Primero comprobar si es un tecnico
+            UbicacionTecnicoEntry tecnico =
+                    tecnicoPorMarcador.get(marker);
+
+            if (tecnico != null) {
+                seleccionarTecnico(tecnico, marker);
+                return true;
+            }
+
+            // Si no es tecnico, comprobar si es sucursal
+            SucursalEntry sucursal =
+                    sucursalPorMarcador.get(marker);
 
             if (sucursal != null) {
                 seleccionarSucursal(sucursal, marker);
@@ -188,6 +230,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
         cargarSucursales();
         cargarIncidentes();
+        iniciarActualizacionUbicaciones();
     }
 
     private void cargarSucursales() {
@@ -247,15 +290,312 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
+
+// ==========================================
+// CONSULTAR UBICACIONES DE TECNICOS
+// ==========================================
+
+    private void cargarUbicacionesTecnicos() {
+
+        if (!isAdded() || binding == null || mMap == null) {
+            return;
+        }
+
+        String token = sharedPref.getString("TOKEN_JWT", "");
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
+
+        api.obtenerUbicacionesTecnicos("JWT " + token)
+                .enqueue(new Callback<RptaObtenerUbicacionesTecnicos>() {
+
+                    @Override
+                    public void onResponse(
+                            @NonNull Call<RptaObtenerUbicacionesTecnicos> call,
+                            @NonNull Response<RptaObtenerUbicacionesTecnicos> response) {
+
+                        if (!isAdded() || binding == null || mMap == null) {
+                            return;
+                        }
+
+                        if (!response.isSuccessful()) {
+                            Log.e("MAPA_TECNICOS",
+                                    "Error HTTP: " + response.code());
+                            return;
+                        }
+
+                        RptaObtenerUbicacionesTecnicos rpta =
+                                response.body();
+
+                        if (rpta == null || rpta.getCode() != 1) {
+                            Log.e("MAPA_TECNICOS",
+                                    "Respuesta incorrecta del servidor");
+                            return;
+                        }
+
+                        listaUbicacionesTecnicos.clear();
+
+                        if (rpta.getData() != null) {
+                            listaUbicacionesTecnicos.addAll(
+                                    rpta.getData()
+                            );
+                        }
+
+                        dibujarMarcadoresTecnicos();
+
+                        // Actualizar la tarjeta si habia un tecnico seleccionado
+                        if (tecnicoSeleccionado != null) {
+
+                            UbicacionTecnicoEntry actualizado = null;
+
+                            for (UbicacionTecnicoEntry item :
+                                    listaUbicacionesTecnicos) {
+
+                                if (item.id_tecnico ==
+                                        tecnicoSeleccionado.id_tecnico) {
+
+                                    actualizado = item;
+                                    break;
+                                }
+                            }
+
+                            if (actualizado != null) {
+
+                                tecnicoSeleccionado = actualizado;
+                                actualizarTarjetaTecnico();
+
+                            } else {
+
+                                tecnicoSeleccionado = null;
+                                marcadorTecnicoSeleccionado = null;
+
+                                mostrarMensaje(
+                                        "La ubicación del técnico ya no está disponible."
+                                );
+                            }
+                        }
+
+                        Log.d("MAPA_TECNICOS",
+                                "Tecnicos encontrados: "
+                                        + listaUbicacionesTecnicos.size());
+                    }
+
+                    @Override
+                    public void onFailure(
+                            @NonNull Call<RptaObtenerUbicacionesTecnicos> call,
+                            @NonNull Throwable t) {
+
+                        Log.e("MAPA_TECNICOS",
+                                "Error de conexión", t);
+                    }
+                });
+    }
+
+
+// ==========================================
+// DIBUJAR MARCADORES DE TECNICOS
+// ==========================================
+
+    private void dibujarMarcadoresTecnicos() {
+
+        if (mMap == null) return;
+
+        // Eliminar los marcadores anteriores de tecnicos
+        for (Marker marker : tecnicoPorMarcador.keySet()) {
+            marker.remove();
+        }
+
+        tecnicoPorMarcador.clear();
+
+        marcadorTecnicoSeleccionado = null;
+
+        for (UbicacionTecnicoEntry tecnico :
+                listaUbicacionesTecnicos) {
+
+            if (tecnico == null) continue;
+
+            try {
+
+                double lat = Double.parseDouble(tecnico.latitud);
+                double lon = Double.parseDouble(tecnico.longitud);
+
+                if (lat < -90 || lat > 90 ||
+                        lon < -180 || lon > 180) {
+                    continue;
+                }
+
+                LatLng ubicacion = new LatLng(lat, lon);
+
+                String nombre = tecnico.tecnico != null
+                        ? tecnico.tecnico : "Técnico";
+
+                String incidente = tecnico.incidente != null
+                        ? tecnico.incidente : "Sin descripción";
+
+                String codigo = String.format(
+                        Locale.getDefault(),
+                        "INC-%03d",
+                        tecnico.id_incidente
+                );
+
+                Marker marker = mMap.addMarker(
+                        new com.google.android.gms.maps.model.MarkerOptions()
+                                .position(ubicacion)
+                                .title(nombre)
+                                .snippet(codigo + " · " + incidente)
+                                .icon(BitmapDescriptorFactory.defaultMarker(
+                                        BitmapDescriptorFactory.HUE_RED
+                                ))
+                );
+
+                if (marker != null) {
+
+                    tecnicoPorMarcador.put(marker, tecnico);
+
+                    // Mantener seleccionado al mismo tecnico
+                    if (tecnicoSeleccionado != null &&
+                            tecnicoSeleccionado.id_tecnico ==
+                                    tecnico.id_tecnico) {
+
+                        marcadorTecnicoSeleccionado = marker;
+
+                        marker.setIcon(
+                                BitmapDescriptorFactory.defaultMarker(
+                                        BitmapDescriptorFactory.HUE_ORANGE
+                                )
+                        );
+                    }
+                }
+
+            } catch (Exception e) {
+
+                Log.e("MAPA_TECNICOS",
+                        "No se pudo dibujar el marcador", e);
+            }
+        }
+    }
+
+
+
+// ==========================================
+// SELECCIONAR TECNICO
+// ==========================================
+
+    private void seleccionarTecnico(
+            UbicacionTecnicoEntry tecnico,
+            Marker marcador) {
+
+        if (binding == null || tecnico == null) return;
+
+        // Quitar seleccion anterior
+        if (marcadorSeleccionado != null) {
+
+            marcadorSeleccionado.setIcon(
+                    BitmapDescriptorFactory.defaultMarker(
+                            BitmapDescriptorFactory.HUE_AZURE
+                    )
+            );
+        }
+
+        marcadorSeleccionado = null;
+        sucursalSeleccionada = null;
+
+        tecnicoSeleccionado = tecnico;
+        marcadorTecnicoSeleccionado = marcador;
+
+        marcador.setIcon(
+                BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_ORANGE
+                )
+        );
+
+        actualizarTarjetaTecnico();
+
+        // Acercar el mapa al tecnico
+        double lat = Double.parseDouble(tecnico.latitud);
+        double lon = Double.parseDouble(tecnico.longitud);
+
+        mMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(lat, lon), 16f
+                )
+        );
+    }
+
+
+// ==========================================
+// ACTUALIZAR TARJETA DEL TECNICO
+// ==========================================
+
+    private void actualizarTarjetaTecnico() {
+
+        if (binding == null || tecnicoSeleccionado == null) {
+            return;
+        }
+
+        UbicacionTecnicoEntry tecnico = tecnicoSeleccionado;
+
+        String codigo = String.format(
+                Locale.getDefault(),
+                "INC-%03d",
+                tecnico.id_incidente
+        );
+
+        binding.txtNombreSeleccionado.setText(
+                tecnico.tecnico != null
+                        ? tecnico.tecnico : "Técnico"
+        );
+
+        binding.txtDireccionSeleccionada.setText(
+                "Atendiendo " + codigo + " · "
+                        + (tecnico.incidente != null
+                        ? tecnico.incidente : "Incidente")
+        );
+
+        binding.txtEstadoUbicacion.setText(
+                "Técnico en proceso · GPS actualizado: "
+                        + (tecnico.fecha_actualizacion != null
+                        ? tecnico.fecha_actualizacion : "Disponible")
+        );
+
+        binding.txtIncidentesSucursal.setText(
+                "Sucursal: " + (tecnico.sucursal != null
+                        ? tecnico.sucursal : "Sin sucursal")
+        );
+
+        binding.txtDetalleIncidentesSucursal.setText(
+                "Incidente: " + codigo
+                        + "   |   Precisión: "
+                        + (tecnico.precision_m != null
+                        ? tecnico.precision_m : "No disponible")
+                        + " m"
+        );
+
+        binding.btnComoLlegar.setText("Cómo llegar");
+        binding.btnComoLlegar.setEnabled(true);
+        binding.btnComoLlegar.setAlpha(1f);
+    }
+
+
     // Filtrar sucursales por nombre o dirección
     private void filtrarSucursales(String texto) {
 
         if (mMap == null || binding == null) return;
 
         mMap.clear();
+
         sucursalPorMarcador.clear();
+        tecnicoPorMarcador.clear();
+
         marcadorSeleccionado = null;
         sucursalSeleccionada = null;
+
+        marcadorTecnicoSeleccionado = null;
+        tecnicoSeleccionado = null;
 
         String busqueda = texto.trim().toLowerCase(Locale.ROOT);
 
@@ -322,6 +662,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
             contador++;
         }
+        // Volver a dibujar los tecnicos despues
+        // de reconstruir los marcadores de sucursales.
+        dibujarMarcadoresTecnicos();
 
         binding.txtCantidadSucursales.setText(
                 contador + (contador == 1
@@ -439,8 +782,45 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     // Abrir la ubicación seleccionada en una aplicación de mapas
+
     private void abrirUbicacion() {
 
+        // CASO 1: TECNICO SELECCIONADO
+        if (tecnicoSeleccionado != null) {
+
+            try {
+
+                double lat = Double.parseDouble(
+                        tecnicoSeleccionado.latitud
+                );
+
+                double lon = Double.parseDouble(
+                        tecnicoSeleccionado.longitud
+                );
+
+                Uri uri = Uri.parse(
+                        "https://www.google.com/maps/dir/?api=1"
+                                + "&destination=" + lat + "," + lon
+                                + "&travelmode=driving"
+                );
+
+                Intent intent = new Intent(
+                        Intent.ACTION_VIEW, uri
+                );
+
+                startActivity(intent);
+
+            } catch (Exception e) {
+
+                mostrarMensaje(
+                        "No se pudo abrir la ruta del técnico."
+                );
+            }
+
+            return;
+        }
+
+        // CASO 2: SUCURSAL SELECCIONADA
         if (sucursalSeleccionada == null) return;
 
         double lat = sucursalSeleccionada.latitud;
@@ -450,9 +830,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 ? sucursalSeleccionada.nombre : "Sucursal";
 
         Uri uri = Uri.parse(
-                "geo:" + lat + "," + lon +
-                        "?q=" + lat + "," + lon +
-                        "(" + Uri.encode(nombre) + ")"
+                "geo:" + lat + "," + lon
+                        + "?q=" + lat + "," + lon
+                        + "(" + Uri.encode(nombre) + ")"
         );
 
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -463,9 +843,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             startActivity(intent);
 
         } else {
-            mostrarMensaje("No hay una aplicación de mapas disponible.");
+
+            mostrarMensaje(
+                    "No hay una aplicación de mapas disponible."
+            );
         }
     }
+
 
 
     private void cargarIncidentes() {
@@ -590,6 +974,47 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
+    private void iniciarActualizacionUbicaciones() {
+
+        handlerUbicaciones.removeCallbacks(
+                actualizacionUbicaciones
+        );
+
+        cargarUbicacionesTecnicos();
+
+        handlerUbicaciones.postDelayed(
+                actualizacionUbicaciones,
+                15000
+        );
+    }
+
+
+    private void detenerActualizacionUbicaciones() {
+
+        handlerUbicaciones.removeCallbacks(
+                actualizacionUbicaciones
+        );
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (mMap != null) {
+            iniciarActualizacionUbicaciones();
+        }
+    }
+
+
+    @Override
+    public void onPause() {
+
+        detenerActualizacionUbicaciones();
+
+        super.onPause();
+    }
+
+
     private void mostrarMensaje(String mensaje) {
 
         if (binding != null) {
@@ -608,6 +1033,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public void onDestroyView() {
+
+        detenerActualizacionUbicaciones();
 
         super.onDestroyView();
 
