@@ -59,9 +59,11 @@ public class AddIncidentFragment extends Fragment {
         setupSpinners();
         cargarSucursales();
 
-        binding.btnIrRegistrarSucursal.setOnClickListener(v -> {
-            Navigation.findNavController(v).navigate(R.id.AddBranchFragment);
-        });
+        // El solicitante no puede elegir otra sucursal
+        binding.sucursalSpinner.setEnabled(false);
+
+        // No puede registrar nuevas sucursales
+        binding.btnIrRegistrarSucursal.setVisibility(View.GONE);
 
         binding.addIncidentButton.setOnClickListener(v -> insertarIncidente(() -> {
             Snackbar.make(binding.getRoot(), "Incidente registrado correctamente", Snackbar.LENGTH_LONG)
@@ -152,9 +154,22 @@ public class AddIncidentFragment extends Fragment {
                 listaSucursales = rpta.getData();
 
                 if (listaSucursales == null || listaSucursales.isEmpty()) {
+                    sucursalSeleccionada = null;
+
                     Snackbar.make(binding.getRoot(),
-                            "No hay sucursales registradas",
+                            "Tu cuenta no tiene una sucursal asignada. Contacta al administrador.",
                             Snackbar.LENGTH_LONG).show();
+
+                    return;
+                }
+
+                if (listaSucursales.size() != 1) {
+                    sucursalSeleccionada = null;
+
+                    Snackbar.make(binding.getRoot(),
+                            "Error en la asignación de sucursal. Contacta al administrador.",
+                            Snackbar.LENGTH_LONG).show();
+
                     return;
                 }
 
@@ -196,6 +211,8 @@ public class AddIncidentFragment extends Fragment {
 
                 Log.d("USAT_APP",
                         "Sucursales cargadas: " + listaSucursales.size());
+
+
             }
 
             @Override
@@ -293,9 +310,6 @@ public class AddIncidentFragment extends Fragment {
         campos.put("prioridad",
                 RequestBody.create(tipoTexto, prioridad));
 
-        campos.put("id_sucursal",
-                RequestBody.create(tipoTexto,
-                        String.valueOf(sucursalSeleccionada.id)));
 
 // Enviar al servidor
         Call<RptaInsertarIncidente> call =

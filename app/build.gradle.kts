@@ -51,4 +51,5 @@ dependencies {
     implementation(libs.retrofit.v2110)
     //implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation(libs.converter.gson)
+    implementation(libs.play.services.maps)
 }

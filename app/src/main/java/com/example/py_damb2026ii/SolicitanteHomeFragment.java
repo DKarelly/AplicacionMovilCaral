@@ -21,31 +21,31 @@ public class SolicitanteHomeFragment extends Fragment {
     private SharedPreferences sharedPref;
 
     public SolicitanteHomeFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         sharedPref = requireActivity().getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
         binding = FragmentSolicitanteHomeBinding.inflate(inflater, container, false);
 
-        binding.txtWelcomeUser.setText("Hola, Solicitante");
+        binding.txtWelcomeUser.setText("IncidentApp");
 
-        binding.cardReportarIncidente.setOnClickListener(v -> 
-            Navigation.findNavController(v).navigate(R.id.AddIncidentFragment)
+        binding.cardReportarIncidente.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.AddIncidentFragment)
         );
 
-        binding.cardMisIncidentes.setOnClickListener(v -> 
-            Navigation.findNavController(v).navigate(R.id.IncidentListFragment)
+        binding.cardMisIncidentes.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.IncidentListFragment)
         );
 
-        binding.cardNotificaciones.setOnClickListener(v -> 
-            Snackbar.make(v, "No hay nuevas notificaciones", Snackbar.LENGTH_SHORT).setAnchorView(requireActivity().findViewById(R.id.fab)).show()
+        binding.cardNotificaciones.setOnClickListener(v ->
+                Snackbar.make(v, "No hay nuevas alertas", Snackbar.LENGTH_SHORT).show()
         );
 
-        binding.cardMiPerfil.setOnClickListener(v -> 
-            Snackbar.make(v, "Perfil: Solicitante (Empleado)", Snackbar.LENGTH_SHORT).setAnchorView(requireActivity().findViewById(R.id.fab)).show()
+        binding.cardMiPerfil.setOnClickListener(v ->
+                Snackbar.make(v, "Perfil disponible próximamente", Snackbar.LENGTH_SHORT).show()
         );
 
         return binding.getRoot();

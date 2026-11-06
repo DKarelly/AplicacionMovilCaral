@@ -62,6 +62,11 @@ public interface JCPyAnyApi {
             @Path("p_rol") String rol
     );
 
+    @GET("api_obtenerTecnicosIncidente/{p_id}")
+    Call<RptaObtenerUsuarios> obtenerTecnicosPorIncidente(
+            @Header("Authorization") String authorization,
+            @Path("p_id") int idIncidente
+    );
 
     @Multipart
     @POST("api_registrarIncidente")

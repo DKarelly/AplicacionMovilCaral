@@ -1,16 +1,21 @@
-
 package com.example.py_damb2026ii;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.InputType;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -18,38 +23,42 @@ import androidx.fragment.app.Fragment;
 import com.example.py_damb2026ii.Interface.JCPyAnyApi;
 import com.example.py_damb2026ii.databinding.FragmentIncidentDetailBinding;
 import com.example.py_damb2026ii.model.RptaDetalleIncidente;
+import com.example.py_damb2026ii.model.RptaInsertarIncidente;
+import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import android.app.AlertDialog;
-import android.text.InputType;
-import android.widget.EditText;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
-import com.example.py_damb2026ii.model.RptaInsertarIncidente;
-
-import com.example.py_damb2026ii.model.RptaInsertarIncidente;
+import androidx.navigation.Navigation;
 
 public class IncidentDetailFragment extends Fragment {
 
     private FragmentIncidentDetailBinding binding;
     private SharedPreferences sharedPref;
+
     private int idIncidenteActual = -1;
     private String estadoActual = "";
+    private int selectedTecnicoId = -1;
+    private boolean tecnicosExpandido = false;
+    private String prioridadSeleccionada = "Media";
+    private String prioridadOriginal = "Media";
+
+    private final List<RptaObtenerUsuarios.Usuario> tecnicosDisponibles = new ArrayList<>();
 
     @Override
     public View onCreateView(
@@ -57,42 +66,248 @@ public class IncidentDetailFragment extends Fragment {
             ViewGroup container,
             Bundle savedInstanceState) {
 
-        binding = FragmentIncidentDetailBinding.inflate(
-                inflater, container, false);
-
-        sharedPref = requireActivity().getSharedPreferences(
-                "USAT_SP", Context.MODE_PRIVATE);
-
-        int idIncidente = -1;
+        binding = FragmentIncidentDetailBinding.inflate(inflater, container, false);
+        sharedPref = requireActivity().getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
 
         if (getArguments() != null) {
-            idIncidente = getArguments()
-                    .getInt("id_incidente", -1);
+            idIncidenteActual = getArguments().getInt("id_incidente", -1);
         }
 
-        idIncidenteActual = idIncidente;
+        binding.btnCambiarEstado.setOnClickListener(v -> mostrarDialogoCambioEstado());
+        binding.btnGuardarCambios.setOnClickListener(v -> guardarCambiosAdmin());
+        binding.btnCerrarIncidente.setOnClickListener(v -> cerrarIncidenteAdmin());
 
-        binding.btnCambiarEstado.setOnClickListener(
-                v -> mostrarDialogoCambioEstado()
-        );
+        binding.btnPriorityAlta.setOnClickListener(v -> seleccionarPrioridad("Alta"));
+        binding.btnPriorityMedia.setOnClickListener(v -> seleccionarPrioridad("Media"));
+        binding.btnPriorityBaja.setOnClickListener(v -> seleccionarPrioridad("Baja"));
 
-        binding.btnAsignarTecnico.setOnClickListener(
-                v -> cargarTecnicos()
-        );
-
-
-        if (idIncidente > 0) {
-            binding.detailTitle.setText("Cargando incidente...");
-            cargarDetalle(idIncidente);
+        if (idIncidenteActual > 0) {
+            cargarDetalle(idIncidenteActual);
         } else {
-            binding.detailTitle.setText(
-                    "No se seleccionó un incidente");
+            binding.detailTitle.setText("No se seleccionó un incidente");
         }
 
         return binding.getRoot();
     }
 
     private void cargarDetalle(int idIncidente) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
+        String token = sharedPref.getString("TOKEN_JWT", "");
+
+        Call<RptaDetalleIncidente> call =
+                api.obtenerDetalleIncidente("JWT " + token, idIncidente);
+
+        call.enqueue(new Callback<RptaDetalleIncidente>() {
+            @Override
+            public void onResponse(
+                    @NonNull Call<RptaDetalleIncidente> call,
+                    @NonNull Response<RptaDetalleIncidente> response) {
+
+                if (!isAdded() || binding == null) return;
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    mostrarError("Error HTTP: " + response.code());
+                    return;
+                }
+
+                RptaDetalleIncidente rpta = response.body();
+
+                if (rpta.getCode() != 1 || rpta.getData() == null || rpta.getData().incidente == null) {
+                    mostrarError(rpta.getMsge());
+                    return;
+                }
+
+                mostrarIncidente(rpta.getData().incidente);
+                mostrarHistorial(rpta.getData().historial);
+
+                if (esAdministrador() && !incidenteFinalizado()) {
+                    cargarTecnicosInline();
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    @NonNull Call<RptaDetalleIncidente> call,
+                    @NonNull Throwable throwable) {
+
+                if (!isAdded() || binding == null) return;
+
+                mostrarError("Error de conexión: " + throwable.getMessage());
+            }
+        });
+    }
+
+
+    private boolean incidenteFinalizado() {
+        return "Resuelto".equalsIgnoreCase(estadoActual)
+                || "Cerrado".equalsIgnoreCase(estadoActual);
+    }
+
+    private void mostrarIncidente(RptaDetalleIncidente.Incidente incidente) {
+        binding.detailCode.setText(String.format(Locale.getDefault(), "INC-%03d", incidente.id));
+        binding.detailTitle.setText(valorSeguro(incidente.titulo, "Sin título"));
+        binding.detailDescription.setText(valorSeguro(incidente.descripcion, "Sin descripción"));
+        binding.detailSolicitante.setText(valorSeguro(incidente.solicitante, "Sin solicitante"));
+        binding.detailTecnico.setText(valorSeguro(incidente.tecnico, "Sin asignar"));
+        binding.detailCategoria.setText(valorSeguro(incidente.categoria, "Sin categoría"));
+        binding.detailSucursal.setText(valorSeguro(incidente.sucursal, "Sin sucursal"));
+        binding.detailFecha.setText(formatearFechaCliente(incidente.fecha_registro));
+
+        binding.detailPriority.setText(valorSeguro(incidente.prioridad, "Media"));
+        binding.detailStatus.setText(valorSeguro(incidente.estado, "Abierto"));
+
+        aplicarChipPrioridad(binding.detailPriority, incidente.prioridad);
+        aplicarChipEstado(binding.detailStatus, incidente.estado);
+
+        estadoActual = valorSeguro(incidente.estado, "Abierto");
+        prioridadSeleccionada = valorSeguro(incidente.prioridad, "Media");
+        prioridadOriginal = prioridadSeleccionada;
+        actualizarBotonesPrioridad();
+
+        selectedTecnicoId = incidente.id_tecnico != null ? incidente.id_tecnico : -1;
+
+        String rol = sharedPref.getString("USER_ROLE", "");
+
+
+        if ("Administrador".equalsIgnoreCase(rol)) {
+
+            binding.detailSubtitle.setVisibility(View.GONE);
+            binding.btnCambiarEstado.setVisibility(View.GONE);
+
+            if (incidenteFinalizado()) {
+                binding.layoutAdminSection.setVisibility(View.GONE);
+            } else {
+                binding.layoutAdminSection.setVisibility(View.VISIBLE);
+            }
+
+        } else if ("Técnico".equalsIgnoreCase(rol)) {
+            binding.detailSubtitle.setText("Técnico · gestión en campo");
+            binding.layoutAdminSection.setVisibility(View.GONE);
+
+            boolean puedeCambiar =
+                    "Abierto".equalsIgnoreCase(estadoActual)
+                            || "En proceso".equalsIgnoreCase(estadoActual);
+
+            binding.btnCambiarEstado.setVisibility(
+                    puedeCambiar ? View.VISIBLE : View.GONE
+            );
+        } else {
+            binding.detailSubtitle.setText("Solicitante · solo lectura");
+            binding.layoutAdminSection.setVisibility(View.GONE);
+            binding.btnCambiarEstado.setVisibility(View.GONE);
+        }
+    }
+
+    private void mostrarHistorial(List<RptaDetalleIncidente.CambioEstado> historial) {
+        LinearLayout contenedor = binding.detailHistorialContainer;
+        contenedor.removeAllViews();
+
+        if (historial == null || historial.isEmpty()) {
+            TextView vacio = new TextView(requireContext());
+            vacio.setText("No hay cambios registrados");
+            vacio.setTextColor(Color.parseColor("#6F8799"));
+            vacio.setTextSize(14);
+            contenedor.addView(vacio);
+            return;
+        }
+
+        List<RptaDetalleIncidente.CambioEstado> lista = new ArrayList<>(historial);
+        Collections.reverse(lista);
+
+        for (int i = 0; i < lista.size(); i++) {
+            RptaDetalleIncidente.CambioEstado cambio = lista.get(i);
+            contenedor.addView(crearItemHistorial(cambio, i < lista.size() - 1));
+        }
+    }
+
+    private View crearItemHistorial(RptaDetalleIncidente.CambioEstado cambio, boolean mostrarLinea) {
+        LinearLayout fila = new LinearLayout(requireContext());
+        fila.setOrientation(LinearLayout.HORIZONTAL);
+
+        LinearLayout.LayoutParams filaParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        filaParams.bottomMargin = dp(14);
+        fila.setLayoutParams(filaParams);
+
+        LinearLayout timeline = new LinearLayout(requireContext());
+        timeline.setOrientation(LinearLayout.VERTICAL);
+        timeline.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+
+        LinearLayout.LayoutParams timelineParams = new LinearLayout.LayoutParams(dp(24), LinearLayout.LayoutParams.WRAP_CONTENT);
+        timeline.setLayoutParams(timelineParams);
+
+        View punto = new View(requireContext());
+        LinearLayout.LayoutParams puntoParams = new LinearLayout.LayoutParams(dp(12), dp(12));
+        GradientDrawable dot = new GradientDrawable();
+        dot.setShape(GradientDrawable.OVAL);
+        dot.setColor(Color.WHITE);
+        dot.setStroke(dp(2), Color.parseColor("#6AA5CE"));
+        punto.setBackground(dot);
+        timeline.addView(punto, puntoParams);
+
+        if (mostrarLinea) {
+            View linea = new View(requireContext());
+            LinearLayout.LayoutParams lineaParams = new LinearLayout.LayoutParams(dp(2), dp(52));
+            lineaParams.topMargin = dp(4);
+            linea.setBackgroundColor(Color.parseColor("#DCE7EF"));
+            timeline.addView(linea, lineaParams);
+        }
+
+        LinearLayout contenido = new LinearLayout(requireContext());
+        contenido.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout.LayoutParams contenidoParams = new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+        );
+        contenidoParams.leftMargin = dp(8);
+        contenido.setLayoutParams(contenidoParams);
+
+        TextView titulo = new TextView(requireContext());
+        titulo.setText(obtenerTituloHistorial(cambio));
+        titulo.setTextColor(Color.parseColor("#1B3145"));
+        titulo.setTextSize(14);
+        titulo.setTypeface(Typeface.DEFAULT_BOLD);
+
+        TextView comentario = new TextView(requireContext());
+        comentario.setText(valorSeguro(cambio.comentario, "Sin comentario"));
+        comentario.setTextColor(Color.parseColor("#5B7487"));
+        comentario.setTextSize(12);
+        comentario.setPadding(0, dp(4), 0, 0);
+
+        TextView info = new TextView(requireContext());
+        info.setText(valorSeguro(cambio.usuario, "Usuario") + " · " + formatearFechaCliente(cambio.fecha_cambio));
+        info.setTextColor(Color.parseColor("#4D88B3"));
+        info.setTextSize(11);
+        info.setPadding(0, dp(4), 0, 0);
+
+        contenido.addView(titulo);
+        contenido.addView(comentario);
+        contenido.addView(info);
+
+        fila.addView(timeline);
+        fila.addView(contenido);
+
+        return fila;
+    }
+
+    private String obtenerTituloHistorial(RptaDetalleIncidente.CambioEstado cambio) {
+        if (cambio.estado_anterior == null || cambio.estado_anterior.trim().isEmpty()) {
+            return valorSeguro(cambio.estado_nuevo, "Abierto");
+        }
+        return valorSeguro(cambio.estado_nuevo, "Estado");
+    }
+
+
+    private void cargarTecnicosInline() {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getString(R.string.dominioWS))
@@ -103,201 +318,401 @@ public class IncidentDetailFragment extends Fragment {
 
         String token = sharedPref.getString("TOKEN_JWT", "");
 
-        Call<RptaDetalleIncidente> call =
-                api.obtenerDetalleIncidente(
-                        "JWT " + token, idIncidente);
+        // Consultar técnicos de la sucursal del incidente actual.
+        Call<RptaObtenerUsuarios> call =
+                api.obtenerTecnicosPorIncidente(
+                        "JWT " + token,
+                        idIncidenteActual
+                );
 
-        call.enqueue(new Callback<RptaDetalleIncidente>() {
+        call.enqueue(new Callback<RptaObtenerUsuarios>() {
 
             @Override
             public void onResponse(
-                    @NonNull Call<RptaDetalleIncidente> call,
-                    @NonNull Response<RptaDetalleIncidente> response) {
+                    @NonNull Call<RptaObtenerUsuarios> call,
+                    @NonNull Response<RptaObtenerUsuarios> response) {
 
                 if (!isAdded() || binding == null) return;
 
-                if (!response.isSuccessful()
-                        || response.body() == null) {
+                if (!response.isSuccessful() || response.body() == null) {
 
-                    mostrarError("Error HTTP: " + response.code());
+                    Snackbar.make(
+                            binding.getRoot(),
+                            "Error al obtener técnicos. HTTP " + response.code(),
+                            Snackbar.LENGTH_LONG
+                    ).show();
+
                     return;
                 }
 
-                RptaDetalleIncidente rpta = response.body();
+                RptaObtenerUsuarios rpta = response.body();
 
-                if (rpta.getCode() != 1
-                        || rpta.getData() == null
-                        || rpta.getData().incidente == null) {
+                if (rpta.getCode() != 1 || rpta.getData() == null) {
 
-                    mostrarError(rpta.getMsge());
+                    Snackbar.make(
+                            binding.getRoot(),
+                            rpta.getMsge() != null
+                                    ? rpta.getMsge()
+                                    : "No se pudieron obtener técnicos",
+                            Snackbar.LENGTH_LONG
+                    ).show();
+
                     return;
                 }
 
-                mostrarIncidente(rpta.getData().incidente);
-                mostrarHistorial(rpta.getData().historial);
+                tecnicosDisponibles.clear();
+
+                for (RptaObtenerUsuarios.Usuario usuario : rpta.getData()) {
+
+                    if (usuario.isActivo()) {
+                        tecnicosDisponibles.add(usuario);
+                    }
+
+                }
+
+                if (tecnicosDisponibles.isEmpty()) {
+
+                    selectedTecnicoId = -1;
+
+                    Snackbar.make(
+                            binding.getRoot(),
+                            "No hay técnicos activos en la sucursal de este incidente",
+                            Snackbar.LENGTH_LONG
+                    ).show();
+
+                }
+
+                mostrarTecnicosInline();
+
             }
 
             @Override
             public void onFailure(
-                    @NonNull Call<RptaDetalleIncidente> call,
+                    @NonNull Call<RptaObtenerUsuarios> call,
                     @NonNull Throwable throwable) {
 
                 if (!isAdded() || binding == null) return;
 
-                mostrarError("Error de conexión: "
-                        + throwable.getMessage());
+                Snackbar.make(
+                        binding.getRoot(),
+                        "Error de conexión: " + throwable.getMessage(),
+                        Snackbar.LENGTH_LONG
+                ).show();
+
             }
+
         });
-    }
-
-    private void mostrarIncidente(
-            RptaDetalleIncidente.Incidente incidente) {
-
-        binding.detailCode.setText(
-                String.format(Locale.getDefault(),
-                        "#INC-%03d", incidente.id));
-
-        binding.detailTitle.setText(incidente.titulo);
-        binding.detailPriority.setText(incidente.prioridad);
-        binding.detailStatus.setText(incidente.estado);
-
-        binding.detailSucursal.setText(
-                "Sucursal: " + incidente.sucursal);
-
-// Mostrar técnico asignado
-        String nombreTecnico = incidente.tecnico;
-
-        if (nombreTecnico == null || nombreTecnico.isEmpty()) {
-            binding.detailTecnico.setText("Técnico: Sin asignar");
-        } else {
-            binding.detailTecnico.setText(
-                    "Técnico: " + nombreTecnico);
-        }
-
-// Mostrar asignación solo al Administrador
-        String rolUsuario = sharedPref.getString("USER_ROLE", "");
-
-        binding.btnAsignarTecnico.setVisibility(
-                "Administrador".equalsIgnoreCase(rolUsuario)
-                        ? View.VISIBLE
-                        : View.GONE
-        );
-
-
-        if (incidente.id_activo != null) {
-            binding.detailActivo.setText(
-                    "ID del activo: " + incidente.id_activo);
-        } else {
-            binding.detailActivo.setText(
-                    "Activo: No asociado");
-        }
-
-        binding.detailFecha.setText(
-                "Fecha: " + incidente.fecha_registro);
-
-        binding.detailDescription.setText(
-                incidente.descripcion);
-
-        // Color de la prioridad
-        int color = Color.parseColor("#F57C00");
-
-        if ("Alta".equals(incidente.prioridad)) {
-            color = Color.parseColor("#D32F2F");
-        } else if ("Baja".equals(incidente.prioridad)) {
-            color = Color.parseColor("#388E3C");
-        }
-
-        binding.detailPriority.setBackgroundColor(color);
-
-        estadoActual = incidente.estado;
-
-        String rol = sharedPref.getString("USER_ROLE", "");
-
-        boolean puedeCambiar =
-                "Técnico".equalsIgnoreCase(rol)
-                        && ("Abierto".equalsIgnoreCase(estadoActual)
-                        || "En proceso".equalsIgnoreCase(estadoActual));
-
-        binding.btnCambiarEstado.setVisibility(
-                puedeCambiar ? View.VISIBLE : View.GONE
-        );
 
     }
 
-    private void mostrarHistorial(
-            List<RptaDetalleIncidente.CambioEstado> historial) {
 
-        LinearLayout contenedor =
-                binding.detailHistorialContainer;
+    private void mostrarTecnicosInline() {
 
-        contenedor.removeAllViews();
+        binding.adminTecnicosContainer.removeAllViews();
 
-        if (historial == null || historial.isEmpty()) {
+        if (tecnicosDisponibles.isEmpty()) {
             TextView vacio = new TextView(requireContext());
-            vacio.setText("No hay cambios registrados");
-            contenedor.addView(vacio);
+            vacio.setText("No hay técnicos activos");
+            vacio.setTextColor(Color.parseColor("#6F8799"));
+            vacio.setTextSize(14);
+            binding.adminTecnicosContainer.addView(vacio);
             return;
         }
 
-        for (RptaDetalleIncidente.CambioEstado cambio : historial) {
+        String nombreSeleccionado = "Seleccionar técnico";
+        String iniciales = "?";
 
-            TextView estado = new TextView(requireContext());
+        for (RptaObtenerUsuarios.Usuario tecnico : tecnicosDisponibles) {
+            if (tecnico.getId() == selectedTecnicoId) {
+                nombreSeleccionado = tecnico.getNombre();
+                iniciales = obtenerIniciales(nombreSeleccionado);
+                break;
+            }
+        }
 
-            String movimiento;
+        // Contenedor del selector
+        MaterialCardView combo = new MaterialCardView(requireContext());
 
-            if (cambio.estado_anterior == null) {
-                movimiento = "Registro inicial: "
-                        + cambio.estado_nuevo;
-            } else {
-                movimiento = cambio.estado_anterior
-                        + " → " + cambio.estado_nuevo;
+        combo.setRadius(dp(16));
+        combo.setCardBackgroundColor(Color.WHITE);
+        combo.setStrokeColor(Color.parseColor("#D5E5EE"));
+        combo.setStrokeWidth(dp(1));
+        combo.setCardElevation(dp(1));
+        combo.setClickable(true);
+        combo.setFocusable(true);
+
+        LinearLayout fila = new LinearLayout(requireContext());
+        fila.setOrientation(LinearLayout.HORIZONTAL);
+        fila.setGravity(Gravity.CENTER_VERTICAL);
+        fila.setPadding(dp(14), dp(12), dp(14), dp(12));
+
+        // Avatar circular
+        TextView avatar = new TextView(requireContext());
+        avatar.setWidth(dp(42));
+        avatar.setHeight(dp(42));
+        avatar.setGravity(Gravity.CENTER);
+        avatar.setText(iniciales);
+        avatar.setTextSize(14);
+        avatar.setTypeface(Typeface.DEFAULT_BOLD);
+        avatar.setTextColor(Color.parseColor("#4D88B3"));
+
+        GradientDrawable fondoAvatar = new GradientDrawable();
+        fondoAvatar.setShape(GradientDrawable.OVAL);
+        fondoAvatar.setColor(Color.parseColor("#E4F2F8"));
+        avatar.setBackground(fondoAvatar);
+
+        // Nombre y subtítulo
+        LinearLayout textos = new LinearLayout(requireContext());
+        textos.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout.LayoutParams textoParams =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+
+        textoParams.leftMargin = dp(12);
+        textos.setLayoutParams(textoParams);
+
+        TextView nombre = new TextView(requireContext());
+        nombre.setText(nombreSeleccionado);
+        nombre.setTextSize(15);
+        nombre.setTypeface(Typeface.DEFAULT_BOLD);
+        nombre.setTextColor(Color.parseColor("#1B3145"));
+        nombre.setSingleLine(true);
+        nombre.setEllipsize(android.text.TextUtils.TruncateAt.END);
+
+        TextView subtitulo = new TextView(requireContext());
+        subtitulo.setText(
+                selectedTecnicoId > 0
+                        ? "Técnico seleccionado"
+                        : "Elige un técnico"
+        );
+        subtitulo.setTextSize(12);
+        subtitulo.setTextColor(Color.parseColor("#7A92A3"));
+
+        textos.addView(nombre);
+        textos.addView(subtitulo);
+
+        // Flecha desplegable
+        TextView flecha = new TextView(requireContext());
+        flecha.setText(tecnicosExpandido ? "⌃" : "⌄");
+        flecha.setTextSize(25);
+        flecha.setTextColor(Color.parseColor("#6E8798"));
+        flecha.setGravity(Gravity.CENTER);
+
+        fila.addView(avatar);
+        fila.addView(textos);
+        fila.addView(flecha);
+
+        combo.addView(fila);
+        binding.adminTecnicosContainer.addView(combo);
+
+        // Abrir o cerrar opciones
+        combo.setOnClickListener(v -> {
+            tecnicosExpandido = !tecnicosExpandido;
+            mostrarTecnicosInline();
+        });
+
+        // Mostrar técnicos solo si está desplegado
+        if (tecnicosExpandido) {
+
+            LinearLayout opciones = new LinearLayout(requireContext());
+            opciones.setOrientation(LinearLayout.VERTICAL);
+
+            opciones.setPadding(
+                    0, dp(8), 0, 0
+            );
+
+            for (RptaObtenerUsuarios.Usuario tecnico : tecnicosDisponibles) {
+
+                boolean seleccionado =
+                        tecnico.getId() == selectedTecnicoId;
+
+                opciones.addView(
+                        crearCardTecnico(tecnico, seleccionado)
+                );
             }
 
-            estado.setText(movimiento);
-            estado.setTextSize(15);
-            estado.setTextColor(Color.BLACK);
-            estado.setTypeface(null, Typeface.BOLD);
-            estado.setPadding(0, 18, 0, 4);
-
-            contenedor.addView(estado);
-
-            TextView usuarioFecha =
-                    new TextView(requireContext());
-
-            usuarioFecha.setText(
-                    "Por: " + cambio.usuario
-                            + "\nFecha: " + cambio.fecha_cambio);
-
-            usuarioFecha.setTextSize(12);
-            usuarioFecha.setTextColor(Color.DKGRAY);
-
-            contenedor.addView(usuarioFecha);
-
-            TextView comentario =
-                    new TextView(requireContext());
-
-            comentario.setText(
-                    "Comentario: " + cambio.comentario);
-
-            comentario.setTextSize(13);
-            comentario.setPadding(0, 4, 0, 8);
-
-            contenedor.addView(comentario);
+            binding.adminTecnicosContainer.addView(opciones);
         }
     }
 
-    private void mostrarError(String mensaje) {
-        binding.detailTitle.setText(
-                "No se pudo cargar el incidente");
 
-        Snackbar.make(binding.getRoot(),
-                mensaje != null ? mensaje : "Error desconocido",
-                Snackbar.LENGTH_LONG).show();
+    private View crearCardTecnico(RptaObtenerUsuarios.Usuario tecnico, boolean seleccionado) {
+        MaterialCardView card = new MaterialCardView(requireContext());
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.bottomMargin = dp(10);
+        card.setLayoutParams(cardParams);
+        card.setRadius(dp(16));
+        card.setStrokeWidth(dp(1));
+        card.setStrokeColor(seleccionado
+                ? Color.parseColor("#73A8D0")
+                : Color.parseColor("#D9E6EE"));
+        card.setCardBackgroundColor(seleccionado
+                ? Color.parseColor("#EAF4FB")
+                : Color.WHITE);
+        card.setClickable(true);
+        card.setFocusable(true);
+
+        LinearLayout fila = new LinearLayout(requireContext());
+        fila.setOrientation(LinearLayout.HORIZONTAL);
+        fila.setGravity(Gravity.CENTER_VERTICAL);
+        fila.setPadding(dp(14), dp(14), dp(14), dp(14));
+
+        TextView avatar = new TextView(requireContext());
+        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(42), dp(42));
+        avatar.setLayoutParams(avatarParams);
+        avatar.setGravity(Gravity.CENTER);
+        avatar.setText(obtenerIniciales(tecnico.getNombre()));
+        avatar.setTextColor(Color.WHITE);
+        avatar.setTextSize(14);
+        avatar.setTypeface(Typeface.DEFAULT_BOLD);
+
+        GradientDrawable avatarBg = new GradientDrawable();
+        avatarBg.setShape(GradientDrawable.OVAL);
+        avatarBg.setColor(Color.parseColor("#5C9B78"));
+        avatar.setBackground(avatarBg);
+
+        LinearLayout textos = new LinearLayout(requireContext());
+        textos.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout.LayoutParams textosParams = new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+        );
+        textosParams.leftMargin = dp(12);
+        textos.setLayoutParams(textosParams);
+
+        TextView nombre = new TextView(requireContext());
+        nombre.setText(valorSeguro(tecnico.getNombre(), "Técnico"));
+        nombre.setTextSize(16);
+        nombre.setTextColor(Color.parseColor("#1B3145"));
+        nombre.setTypeface(Typeface.DEFAULT_BOLD);
+
+        TextView subtitulo = new TextView(requireContext());
+        subtitulo.setText("Técnico disponible");
+        subtitulo.setTextSize(13);
+        subtitulo.setTextColor(Color.parseColor("#6F8799"));
+
+        TextView check = new TextView(requireContext());
+        check.setText(seleccionado ? "✓" : "");
+        check.setTextSize(20);
+        check.setTextColor(Color.parseColor("#4D88B3"));
+        check.setTypeface(Typeface.DEFAULT_BOLD);
+
+        textos.addView(nombre);
+        textos.addView(subtitulo);
+
+        fila.addView(avatar);
+        fila.addView(textos);
+        fila.addView(check);
+
+        card.addView(fila);
+
+        card.setOnClickListener(v -> {
+            selectedTecnicoId = tecnico.getId();
+            tecnicosExpandido = false;
+            mostrarTecnicosInline();
+        });
+
+        return card;
+    }
+
+    private void seleccionarPrioridad(String prioridad) {
+        prioridadSeleccionada = prioridad;
+        actualizarBotonesPrioridad();
+    }
+
+    private void actualizarBotonesPrioridad() {
+        estilizarBotonPrioridad(binding.btnPriorityAlta, "Alta".equalsIgnoreCase(prioridadSeleccionada), "Alta");
+        estilizarBotonPrioridad(binding.btnPriorityMedia, "Media".equalsIgnoreCase(prioridadSeleccionada), "Media");
+        estilizarBotonPrioridad(binding.btnPriorityBaja, "Baja".equalsIgnoreCase(prioridadSeleccionada), "Baja");
+    }
+
+    private void estilizarBotonPrioridad(MaterialButton boton, boolean seleccionado, String prioridad) {
+        int stroke = Color.parseColor("#D7E4ED");
+        int bg = Color.WHITE;
+        int fg = Color.parseColor("#5E7688");
+
+        if (seleccionado) {
+            if ("Alta".equalsIgnoreCase(prioridad)) {
+                stroke = Color.parseColor("#D9867E");
+                fg = Color.parseColor("#C86B63");
+                bg = Color.parseColor("#FFF7F6");
+            } else if ("Media".equalsIgnoreCase(prioridad)) {
+                stroke = Color.parseColor("#D6A247");
+                fg = Color.parseColor("#C38A15");
+                bg = Color.parseColor("#FFF9ED");
+            } else {
+                stroke = Color.parseColor("#7BB08D");
+                fg = Color.parseColor("#5C9B78");
+                bg = Color.parseColor("#F4FBF6");
+            }
+        }
+
+        boton.setStrokeColor(ColorStateList.valueOf(stroke));
+        boton.setStrokeWidth(dp(1));
+        boton.setBackgroundTintList(ColorStateList.valueOf(bg));
+        boton.setTextColor(fg);
     }
 
 
-    private void mostrarDialogoCambioEstado() {
+    private void guardarCambiosAdmin() {
 
+        if (incidenteFinalizado()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Este incidente ya está finalizado y no admite modificaciones.",
+                    Snackbar.LENGTH_LONG
+            ).show();
+            return;
+        }
+
+        if (selectedTecnicoId <= 0) {
+            Snackbar.make(binding.getRoot(),
+                    "Selecciona un técnico",
+                    Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        if (!prioridadSeleccionada.equalsIgnoreCase(prioridadOriginal)) {
+            Snackbar.make(binding.getRoot(),
+                    "La prioridad ya quedó lista visualmente, pero para guardarla en BD falta un endpoint en Flask.",
+                    Snackbar.LENGTH_LONG).show();
+        }
+
+        asignarTecnico(selectedTecnicoId);
+    }
+
+    private void cerrarIncidenteAdmin() {
+
+        if (incidenteFinalizado()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Este incidente ya está finalizado y no admite modificaciones.",
+                    Snackbar.LENGTH_LONG
+            ).show();
+            return;
+        }
+
+        if ("Resuelto".equalsIgnoreCase(estadoActual) || "Cerrado".equalsIgnoreCase(estadoActual)) {
+            Snackbar.make(binding.getRoot(),
+                    "El incidente ya está cerrado",
+                    Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        enviarCambioEstadoDirecto("Resuelto", "Incidente cerrado por administrador");
+    }
+
+    private void mostrarDialogoCambioEstado() {
         String nuevoEstado;
 
         if ("Abierto".equalsIgnoreCase(estadoActual)) {
@@ -318,11 +733,7 @@ public class IncidentDetailFragment extends Fragment {
 
         LinearLayout contenedor = new LinearLayout(requireContext());
         contenedor.setOrientation(LinearLayout.VERTICAL);
-
-        int espacio = (int) (24 *
-                getResources().getDisplayMetrics().density);
-
-        contenedor.setPadding(espacio, 8, espacio, 8);
+        contenedor.setPadding(dp(24), dp(8), dp(24), dp(8));
         contenedor.addView(inputComentario);
 
         AlertDialog dialogo = new AlertDialog.Builder(requireContext())
@@ -332,24 +743,19 @@ public class IncidentDetailFragment extends Fragment {
                 .setPositiveButton("Guardar", null)
                 .create();
 
-        dialogo.setOnShowListener(d -> {
+        dialogo.setOnShowListener(d ->
+                dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
+                        .setOnClickListener(v -> {
+                            String comentario = inputComentario.getText().toString().trim();
 
-            dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
-                    .setOnClickListener(v -> {
+                            if (comentario.isEmpty()) {
+                                inputComentario.setError("El comentario es obligatorio");
+                                return;
+                            }
 
-                        String comentario = inputComentario.getText()
-                                .toString().trim();
-
-                        if (comentario.isEmpty()) {
-                            inputComentario.setError(
-                                    "El comentario es obligatorio");
-                            return;
-                        }
-
-                        enviarCambioEstado(
-                                nuevoEstado, comentario, dialogo);
-                    });
-        });
+                            enviarCambioEstado(nuevoEstado, comentario, dialogo);
+                        })
+        );
 
         dialogo.show();
     }
@@ -365,7 +771,6 @@ public class IncidentDetailFragment extends Fragment {
                 .build();
 
         JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
-
         String token = sharedPref.getString("TOKEN_JWT", "");
 
         Map<String, String> datos = new HashMap<>();
@@ -373,17 +778,11 @@ public class IncidentDetailFragment extends Fragment {
         datos.put("comentario", comentario);
 
         Call<RptaInsertarIncidente> call =
-                api.cambiarEstadoIncidente(
-                        "JWT " + token,
-                        idIncidenteActual,
-                        datos
-                );
+                api.cambiarEstadoIncidente("JWT " + token, idIncidenteActual, datos);
 
-        dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setEnabled(false);
+        dialogo.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
         call.enqueue(new Callback<RptaInsertarIncidente>() {
-
             @Override
             public void onResponse(
                     @NonNull Call<RptaInsertarIncidente> call,
@@ -396,10 +795,7 @@ public class IncidentDetailFragment extends Fragment {
 
                 RptaInsertarIncidente rpta = response.body();
 
-                if (response.isSuccessful()
-                        && rpta != null
-                        && rpta.getCode() == 1) {
-
+                if (response.isSuccessful() && rpta != null && rpta.getCode() == 1) {
                     dialogo.dismiss();
 
                     Snackbar.make(binding.getRoot(),
@@ -409,16 +805,14 @@ public class IncidentDetailFragment extends Fragment {
                     cargarDetalle(idIncidenteActual);
 
                 } else {
-
-                    dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
-                            .setEnabled(true);
+                    dialogo.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
 
                     String mensaje = rpta != null
                             ? rpta.getMsge()
                             : "Error HTTP: " + response.code();
 
                     Snackbar.make(binding.getRoot(),
-                            mensaje != null ? mensaje : "Error al actualizar",
+                            valorSeguro(mensaje, "Error al actualizar"),
                             Snackbar.LENGTH_LONG).show();
                 }
             }
@@ -433,8 +827,7 @@ public class IncidentDetailFragment extends Fragment {
                     return;
                 }
 
-                dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
-                        .setEnabled(true);
+                dialogo.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
 
                 Snackbar.make(binding.getRoot(),
                         "Error de conexión: " + throwable.getMessage(),
@@ -443,75 +836,51 @@ public class IncidentDetailFragment extends Fragment {
         });
     }
 
-
-    private void cargarTecnicos() {
-
+    private void enviarCambioEstadoDirecto(String nuevoEstado, String comentario) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getString(R.string.dominioWS))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
-
         String token = sharedPref.getString("TOKEN_JWT", "");
 
-        Call<RptaObtenerUsuarios> call =
-                api.buscarUsuariosPorRol(
-                        "JWT " + token,
-                        "Técnico"
-                );
+        Map<String, String> datos = new HashMap<>();
+        datos.put("estado", nuevoEstado);
+        datos.put("comentario", comentario);
 
-        call.enqueue(new Callback<RptaObtenerUsuarios>() {
+        Call<RptaInsertarIncidente> call =
+                api.cambiarEstadoIncidente("JWT " + token, idIncidenteActual, datos);
 
+        call.enqueue(new Callback<RptaInsertarIncidente>() {
             @Override
             public void onResponse(
-                    @NonNull Call<RptaObtenerUsuarios> call,
-                    @NonNull Response<RptaObtenerUsuarios> response) {
+                    @NonNull Call<RptaInsertarIncidente> call,
+                    @NonNull Response<RptaInsertarIncidente> response) {
 
                 if (!isAdded() || binding == null) return;
 
-                if (!response.isSuccessful() || response.body() == null) {
+                RptaInsertarIncidente rpta = response.body();
+
+                if (response.isSuccessful() && rpta != null && rpta.getCode() == 1) {
                     Snackbar.make(binding.getRoot(),
-                            "Error HTTP: " + response.code(),
+                            "Incidente cerrado correctamente",
                             Snackbar.LENGTH_LONG).show();
-                    return;
-                }
+                    cargarDetalle(idIncidenteActual);
+                } else {
+                    String mensaje = rpta != null
+                            ? rpta.getMsge()
+                            : "Error HTTP: " + response.code();
 
-                RptaObtenerUsuarios rpta = response.body();
-
-                if (rpta.getCode() != 1 || rpta.getData() == null) {
                     Snackbar.make(binding.getRoot(),
-                            rpta.getMsge() != null
-                                    ? rpta.getMsge()
-                                    : "Error al obtener técnicos",
+                            valorSeguro(mensaje, "No se pudo cerrar el incidente"),
                             Snackbar.LENGTH_LONG).show();
-                    return;
                 }
-
-                List<RptaObtenerUsuarios.Usuario> tecnicosActivos =
-                        new ArrayList<>();
-
-                for (RptaObtenerUsuarios.Usuario usuario
-                        : rpta.getData()) {
-
-                    if (usuario.isActivo()) {
-                        tecnicosActivos.add(usuario);
-                    }
-                }
-
-                if (tecnicosActivos.isEmpty()) {
-                    Snackbar.make(binding.getRoot(),
-                            "No hay técnicos activos registrados",
-                            Snackbar.LENGTH_LONG).show();
-                    return;
-                }
-
-                mostrarDialogoTecnicos(tecnicosActivos);
             }
 
             @Override
             public void onFailure(
-                    @NonNull Call<RptaObtenerUsuarios> call,
+                    @NonNull Call<RptaInsertarIncidente> call,
                     @NonNull Throwable throwable) {
 
                 if (!isAdded() || binding == null) return;
@@ -523,60 +892,16 @@ public class IncidentDetailFragment extends Fragment {
         });
     }
 
-
-    private void mostrarDialogoTecnicos(
-            List<RptaObtenerUsuarios.Usuario> tecnicos) {
-
-        String[] nombres = new String[tecnicos.size()];
-
-        for (int i = 0; i < tecnicos.size(); i++) {
-            nombres[i] = tecnicos.get(i).getNombre();
-        }
-
-        final int[] seleccionado = {-1};
-
-        AlertDialog dialogo = new AlertDialog.Builder(requireContext())
-                .setTitle("Seleccionar técnico")
-                .setSingleChoiceItems(nombres, -1,
-                        (dialog, posicion) -> {
-                            seleccionado[0] = posicion;
-                        })
-                .setNegativeButton("Cancelar", null)
-                .setPositiveButton("Asignar", null)
-                .create();
-
-        dialogo.show();
-
-        dialogo.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener(v -> {
-
-                    if (seleccionado[0] == -1) {
-                        Snackbar.make(binding.getRoot(),
-                                "Seleccione un técnico",
-                                Snackbar.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    RptaObtenerUsuarios.Usuario tecnico =
-                            tecnicos.get(seleccionado[0]);
-
-                    new AlertDialog.Builder(requireContext())
-                            .setTitle("Confirmar asignación")
-                            .setMessage(
-                                    "¿Asignar este incidente a "
-                                            + tecnico.getNombre() + "?")
-                            .setNegativeButton("Cancelar", null)
-                            .setPositiveButton("Confirmar",
-                                    (confirmacion, opcion) -> {
-                                        dialogo.dismiss();
-                                        asignarTecnico(tecnico.getId());
-                                    })
-                            .show();
-                });
-    }
-
-
     private void asignarTecnico(int idTecnico) {
+
+        if (incidenteFinalizado()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Este incidente ya está finalizado y no admite modificaciones.",
+                    Snackbar.LENGTH_LONG
+            ).show();
+            return;
+        }
 
         if (idIncidenteActual <= 0) {
             Snackbar.make(binding.getRoot(),
@@ -591,23 +916,17 @@ public class IncidentDetailFragment extends Fragment {
                 .build();
 
         JCPyAnyApi api = retrofit.create(JCPyAnyApi.class);
-
         String token = sharedPref.getString("TOKEN_JWT", "");
 
         Map<String, Integer> datos = new HashMap<>();
         datos.put("id_tecnico", idTecnico);
 
         Call<RptaInsertarIncidente> call =
-                api.asignarTecnico(
-                        "JWT " + token,
-                        idIncidenteActual,
-                        datos
-                );
+                api.asignarTecnico("JWT " + token, idIncidenteActual, datos);
 
-        binding.btnAsignarTecnico.setEnabled(false);
+        binding.btnGuardarCambios.setEnabled(false);
 
         call.enqueue(new Callback<RptaInsertarIncidente>() {
-
             @Override
             public void onResponse(
                     @NonNull Call<RptaInsertarIncidente> call,
@@ -615,31 +934,34 @@ public class IncidentDetailFragment extends Fragment {
 
                 if (!isAdded() || binding == null) return;
 
-                binding.btnAsignarTecnico.setEnabled(true);
+                binding.btnGuardarCambios.setEnabled(true);
 
                 RptaInsertarIncidente rpta = response.body();
 
-                if (response.isSuccessful()
-                        && rpta != null
-                        && rpta.getCode() == 1) {
+                if (response.isSuccessful() && rpta != null && rpta.getCode() == 1) {
 
-                    Snackbar.make(binding.getRoot(),
-                            "Técnico asignado correctamente",
-                            Snackbar.LENGTH_LONG).show();
+                    android.widget.Toast.makeText(
+                            requireContext(),
+                            "Cambios guardados correctamente",
+                            android.widget.Toast.LENGTH_SHORT
+                    ).show();
 
-                    // Recargar el detalle desde MySQL
-                    cargarDetalle(idIncidenteActual);
+                    androidx.navigation.NavController navController =
+                            Navigation.findNavController(binding.getRoot());
+
+                    if (!navController.popBackStack(
+                            R.id.IncidentListFragment, false)) {
+
+                        navController.navigate(R.id.IncidentListFragment);
+                    }
 
                 } else {
-
                     String mensaje = rpta != null
                             ? rpta.getMsge()
                             : "Error HTTP: " + response.code();
 
                     Snackbar.make(binding.getRoot(),
-                            mensaje != null
-                                    ? mensaje
-                                    : "No se pudo asignar el técnico",
+                            valorSeguro(mensaje, "No se pudo asignar el técnico"),
                             Snackbar.LENGTH_LONG).show();
                 }
             }
@@ -651,7 +973,7 @@ public class IncidentDetailFragment extends Fragment {
 
                 if (!isAdded() || binding == null) return;
 
-                binding.btnAsignarTecnico.setEnabled(true);
+                binding.btnGuardarCambios.setEnabled(true);
 
                 Snackbar.make(binding.getRoot(),
                         "Error de conexión: " + throwable.getMessage(),
@@ -660,8 +982,100 @@ public class IncidentDetailFragment extends Fragment {
         });
     }
 
+    private void aplicarChipPrioridad(TextView textView, String prioridad) {
+        int bg = Color.parseColor("#F6E5E1");
+        int fg = Color.parseColor("#D07B6B");
 
+        if ("Media".equalsIgnoreCase(prioridad)) {
+            bg = Color.parseColor("#F7EFD9");
+            fg = Color.parseColor("#C38A15");
+        } else if ("Baja".equalsIgnoreCase(prioridad)) {
+            bg = Color.parseColor("#E4F2E8");
+            fg = Color.parseColor("#5C9B78");
+        }
 
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(bg);
+        drawable.setCornerRadius(dp(20));
+        textView.setBackground(drawable);
+        textView.setTextColor(fg);
+    }
+
+    private void aplicarChipEstado(TextView textView, String estado) {
+        int bg = Color.parseColor("#EAF4FB");
+        int fg = Color.parseColor("#4D88B3");
+
+        if ("Resuelto".equalsIgnoreCase(estado) || "Cerrado".equalsIgnoreCase(estado)) {
+            bg = Color.parseColor("#E7F3EA");
+            fg = Color.parseColor("#5C9B78");
+        } else if ("Abierto".equalsIgnoreCase(estado)) {
+            bg = Color.parseColor("#EEF4F7");
+            fg = Color.parseColor("#6C8698");
+        }
+
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(bg);
+        drawable.setCornerRadius(dp(20));
+        textView.setBackground(drawable);
+        textView.setTextColor(fg);
+    }
+
+    private void mostrarError(String mensaje) {
+        binding.detailTitle.setText("No se pudo cargar el incidente");
+
+        Snackbar.make(binding.getRoot(),
+                valorSeguro(mensaje, "Error desconocido"),
+                Snackbar.LENGTH_LONG).show();
+    }
+
+    private boolean esAdministrador() {
+        String rol = sharedPref.getString("USER_ROLE", "");
+        return "Administrador".equalsIgnoreCase(rol);
+    }
+
+    private String valorSeguro(String valor, String defecto) {
+        return (valor != null && !valor.trim().isEmpty()) ? valor : defecto;
+    }
+
+    private String obtenerIniciales(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) return "TE";
+
+        String[] partes = nombre.trim().split("\\s+");
+
+        if (partes.length == 1) {
+            return partes[0].substring(0, Math.min(2, partes[0].length())).toUpperCase();
+        }
+
+        return ("" + partes[0].charAt(0) + partes[1].charAt(0)).toUpperCase();
+    }
+
+    private String formatearFechaCliente(String fechaApi) {
+        if (fechaApi == null || fechaApi.trim().isEmpty()) return "";
+
+        try {
+            SimpleDateFormat entrada =
+                    new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+            entrada.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+            Date fecha = entrada.parse(fechaApi);
+
+            if (fecha == null) return fechaApi;
+
+            SimpleDateFormat salida =
+                    new SimpleDateFormat("dd MMM yyyy · h:mm a", new Locale("es", "PE"));
+
+            String resultado = salida.format(fecha);
+            resultado = resultado.replace("AM", "a. m.").replace("PM", "p. m.");
+
+            return resultado;
+        } catch (Exception e) {
+            return fechaApi;
+        }
+    }
+
+    private int dp(int valor) {
+        return (int) (valor * requireContext().getResources().getDisplayMetrics().density);
+    }
 
     @Override
     public void onDestroyView() {
