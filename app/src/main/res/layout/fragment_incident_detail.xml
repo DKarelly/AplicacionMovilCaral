@@ -1,58 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".IncidentDetailFragment"
-    android:background="@color/productGridBackgroundColor"
-    android:padding="16dp">
+    android:background="#F4F9FC"
+    android:paddingStart="28dp"
+    android:paddingEnd="28dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Top Header card -->
+        <TextView
+            android:id="@+id/detail_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="INC-001"
+            android:textColor="#1B3145"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/detail_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Administrador · administración"
+            android:textColor="#7A92A3"
+            android:textSize="13sp" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            android:layout_marginTop="14dp"
+            app:cardBackgroundColor="#EAF4FB"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="1dp"
+            app:strokeColor="#D5E5EE"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/detail_code"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="#INC-..."
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:textColor="@android:color/black" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/detail_priority"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Media"
+                        android:paddingStart="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="6dp"
+                        android:text="Alta"
                         android:textSize="12sp"
-                        android:textColor="@android:color/white"
-                        android:background="@android:color/holo_orange_dark"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
-                        android:layout_marginStart="8dp" />
+                        android:textStyle="bold" />
 
                     <View
                         android:layout_width="0dp"
@@ -63,161 +75,296 @@
                         android:id="@+id/detail_status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Cargando..."
+                        android:paddingStart="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="6dp"
+                        android:text="En proceso"
                         android:textSize="12sp"
-                        android:textColor="@android:color/white"
-                        android:background="@android:color/holo_blue_dark"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="4dp" />
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/detail_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Cargando incidente..."
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/black"
-                    android:layout_marginTop="12dp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@android:color/darker_gray"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:id="@+id/detail_sucursal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sucursal: Cargando..."
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="4dp" />
-
-                <TextView
-                    android:id="@+id/detail_tecnico"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Técnico: Sin asignar"
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="4dp" />
-
-
-                <TextView
-                    android:id="@+id/detail_activo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Activo: Cargando..."
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="4dp" />
-
-                <TextView
-                    android:id="@+id/detail_fecha"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Fecha: Cargando..."
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="4dp" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Description Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Descripción"
-                    android:textStyle="bold"
+                    android:layout_marginTop="14dp"
+                    android:text="Sin conexión a red en piso 3"
+                    android:textColor="#1B3145"
                     android:textSize="16sp"
-                    android:textColor="@android:color/black" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/detail_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Cargando descripción..."
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Descripción del incidente"
+                    android:textColor="#355065"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Solicitante"
+                            android:textColor="#7A92A3"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/detail_solicitante"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Mariana Ruiz"
+                            android:textColor="#1B3145"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Técnico"
+                            android:textColor="#7A92A3"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/detail_tecnico"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Carlos Mendoza"
+                            android:textColor="#1B3145"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Categoría"
+                            android:textColor="#7A92A3"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/detail_categoria"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Redes"
+                            android:textColor="#1B3145"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sucursal"
+                            android:textColor="#7A92A3"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/detail_sucursal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Sede Central"
+                            android:textColor="#1B3145"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/detail_fecha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="04 nov 2026 · 4:39 p. m."
+                    android:textColor="#7A92A3"
+                    android:textSize="11sp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Current status timeline card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@android:color/white">
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="1dp"
+            app:strokeColor="#D9E6EE"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Estado actual"
-                    android:textStyle="bold"
+                    android:text="Historial de estados"
+                    android:textColor="#1B3145"
                     android:textSize="16sp"
-                    android:textColor="@android:color/black" />
+                    android:textStyle="bold" />
 
-                <!-- Historial real: se llenará desde IncidentDetailFragment.java -->
                 <LinearLayout
                     android:id="@+id/detail_historial_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="14dp"
                     android:orientation="vertical" />
-
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_asignar_tecnico"
+        <LinearLayout
+            android:id="@+id/layout_admin_section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Asignar técnico"
-            android:visibility="gone"
-            app:cornerRadius="12dp" />
+            android:layout_marginTop="18dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ASIGNAR TÉCNICO"
+                android:textColor="#6E8798"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/admin_tecnicos_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="CAMBIAR PRIORIDAD"
+                android:textColor="#6E8798"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_priority_alta"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Alta" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_priority_media"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Media" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_priority_baja"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Baja" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_guardar_cambios"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:text="Guardar"
+                    app:backgroundTint="#DDEBF4"
+                    app:cornerRadius="26dp"
+                    android:textColor="#4F7C9B" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_cerrar_incidente"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:text="Cerrar incidente"
+                    app:backgroundTint="#D98880"
+                    app:cornerRadius="26dp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_cambiar_estado"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="18dp"
             android:text="Cambiar estado"
             android:visibility="gone"
-            app:cornerRadius="12dp" />
-
+            app:backgroundTint="#4D88B3"
+            app:cornerRadius="26dp"
+            android:textColor="@android:color/white" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
-
-

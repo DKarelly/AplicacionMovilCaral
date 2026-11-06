@@ -90,6 +90,18 @@
     </fragment>
 
     <fragment
+        android:id="@+id/ProfileFragment"
+        android:name="com.example.py_damb2026ii.ProfileFragment"
+        android:label="Mi perfil"
+        tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/MapFragment"
+        android:name="com.example.py_damb2026ii.MapFragment"
+        android:label="Mapa de empresas"
+        tools:layout="@layout/fragment_map" />
+
+    <fragment
         android:id="@+id/FirstFragment"
         android:name="com.example.py_damb2026ii.FirstFragment"
         android:label="@string/first_fragment_label"

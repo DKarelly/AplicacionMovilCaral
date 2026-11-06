@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4F8FB"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tu cuenta"
+            android:textColor="#1B3145"
+            android:textSize="14sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#D9E6EE"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="22dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="76dp"
+                    android:layout_height="76dp"
+                    app:cardBackgroundColor="#DCEEF7"
+                    app:cardCornerRadius="40dp"
+                    app:cardElevation="0dp">
+
+                    <TextView
+                        android:id="@+id/txtProfileInitials"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="YA"
+                        android:textColor="#397CA7"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/txtProfileName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="Nombre del usuario"
+                    android:textColor="#1B3145"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtProfileRole"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Administrador"
+                    android:textColor="#4D88B3"
+                    android:textSize="13sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="22dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="#E3EDF4" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Información de la cuenta"
+                    android:textColor="#1B3145"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Nombre"
+                    android:textColor="#8AA1B3"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/txtProfileNameDetail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Usuario"
+                    android:textColor="#1B3145"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Tipo de usuario"
+                    android:textColor="#8AA1B3"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/txtProfileRoleDetail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Administrador"
+                    android:textColor="#1B3145"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="28dp"
+            android:text="Cerrar sesión"
+            android:textAllCaps="false"
+            android:textColor="#C86B63"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:backgroundTint="#FCEDEC"
+            app:cornerRadius="14dp"
+            app:strokeColor="#F0C9C5"
+            app:strokeWidth="1dp" />
+
+    </LinearLayout>
+
+</ScrollView>

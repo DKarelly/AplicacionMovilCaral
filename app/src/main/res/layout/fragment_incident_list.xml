@@ -1,440 +1,153 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".IncidentListFragment">
-
-    <androidx.core.widget.NestedScrollView
+    android:background="@color/productGridBackgroundColor">
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="56dp"
-        android:background="@color/productGridBackgroundColor"
-        android:padding="16dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
+        android:orientation="vertical"
+        android:paddingTop="16dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- ===== Filtros por estado ===== -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Filtrar por estado"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chip_group_estado"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:checkedChip="@+id/chip_estado_todos"
-                    app:selectionRequired="true"
-                    app:singleLine="true"
-                    app:singleSelection="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_estado_todos"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Todos" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_estado_abierto"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Abierto" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_estado_proceso"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="En proceso" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_estado_resuelto"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Resuelto" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_estado_cerrado"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cerrado" />
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
-
-            <!-- ===== Filtros por prioridad ===== -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Filtrar por prioridad"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_prioridad"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:checkedChip="@+id/chip_prioridad_todas"
-                app:selectionRequired="true"
-                app:singleLine="true"
-                app:singleSelection="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_prioridad_todas"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Todas" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_prioridad_alta"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Alta" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_prioridad_media"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Media" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_prioridad_baja"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Baja" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <!-- Leyenda del semáforo SLA -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="SLA: 🟢 a tiempo · 🟡 menos del 25% restante · 🔴 vencido (Alta 4h · Media 24h · Baja 72h)"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="11sp" />
-
-            <!-- Mensaje cuando el filtro no encuentra incidentes -->
-            <TextView
-                android:id="@+id/txt_lista_vacia"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:padding="32dp"
-                android:text="📭 No hay incidentes con los filtros seleccionados"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="14sp"
-                android:visibility="gone" />
-
-            <!-- Lista de Incidentes RecyclerView -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view_incidents"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false" />
-
-
-            <!-- Sección de Accesos Rápidos (Visible solo para Administrador) -->
+            android:paddingHorizontal="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
             <LinearLayout
-                android:id="@+id/admin_quick_access_layout"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="24dp"
-                android:visibility="gone">
-
-                <!-- Tarjetas de Métricas -->
-                <GridLayout
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/txt_role_mini"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Administrador"
+                    android:background="@drawable/bg_badge"
+                    android:paddingHorizontal="11dp"
+                    android:paddingVertical="5dp"
+                    android:textSize="11sp"
+                    android:textColor="@color/colorPrimary" />
+                <TextView
+                    android:id="@+id/txt_list_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:columnCount="2"
-                    android:alignmentMode="alignMargins"
-                    android:columnOrderPreserved="false">
-
-                    <!-- Total Incidentes -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp">
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Total incidentes"
-                                android:textSize="14sp"
-                                android:textColor="@android:color/darker_gray"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="48"
-                                android:textSize="24sp"
-                                android:textStyle="bold"
-                                android:textColor="@android:color/black"
-                                android:layout_marginTop="4dp"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Registrados"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/darker_gray"
-                                android:layout_marginTop="2dp"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <!-- Pendientes -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp">
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Pendientes"
-                                android:textSize="14sp"
-                                android:textColor="@android:color/darker_gray"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="12"
-                                android:textSize="24sp"
-                                android:textStyle="bold"
-                                android:textColor="@android:color/holo_orange_dark"
-                                android:layout_marginTop="4dp"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Por asignar o atender"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/darker_gray"
-                                android:layout_marginTop="2dp"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <!-- En proceso -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp">
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="En proceso"
-                                android:textSize="14sp"
-                                android:textColor="@android:color/darker_gray"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="9"
-                                android:textSize="24sp"
-                                android:textStyle="bold"
-                                android:textColor="@android:color/holo_blue_dark"
-                                android:layout_marginTop="4dp"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Atendidos por técnicos"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/darker_gray"
-                                android:layout_marginTop="2dp"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <!-- Resueltos -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp">
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Resueltos"
-                                android:textSize="14sp"
-                                android:textColor="@android:color/darker_gray"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="27"
-                                android:textSize="24sp"
-                                android:textStyle="bold"
-                                android:textColor="@android:color/holo_green_dark"
-                                android:layout_marginTop="4dp"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Incidentes finalizados"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/darker_gray"
-                                android:layout_marginTop="2dp"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </GridLayout>
-
-                <!-- Tarjeta Principal de Accesos Rápidos -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginHorizontal="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Accesos rápidos"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@android:color/black"/>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center"
-                            android:layout_marginTop="16dp">
-
-                            <!-- Acceso: Incidentes -->
-                            <LinearLayout
-                                android:id="@+id/btn_quick_incidentes"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:background="?attr/selectableItemBackground"
-                                android:padding="8dp">
-                                <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/usat_filter"
-                                    app:tint="@color/colorPrimary" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Incidentes"
-                                    android:textSize="14sp"
-                                    android:textColor="@android:color/black"
-                                    android:layout_marginTop="8dp"/>
-                            </LinearLayout>
-
-                            <!-- Acceso: Técnicos -->
-                            <LinearLayout
-                                android:id="@+id/btn_quick_tecnicos"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:background="?attr/selectableItemBackground"
-                                android:padding="8dp">
-                                <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/usat_menu"
-                                    app:tint="@color/colorPrimary" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Técnicos"
-                                    android:textSize="14sp"
-                                    android:textColor="@android:color/black"
-                                    android:layout_marginTop="8dp"/>
-                            </LinearLayout>
-
-                            <!-- Acceso: Reportes -->
-                            <LinearLayout
-                                android:id="@+id/btn_quick_reportes"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:background="?attr/selectableItemBackground"
-                                android:padding="8dp">
-                                <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/usat_search"
-                                    app:tint="@color/colorPrimary" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Reportes"
-                                    android:textSize="14sp"
-                                    android:textColor="@android:color/black"
-                                    android:layout_marginTop="8dp"/>
-                            </LinearLayout>
-
-                        </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="sans-serif-black"
+                    android:includeFontPadding="false"
+                    android:text="Todos los incidentes"
+                    android:textSize="23sp"
+                    android:textColor="@color/textPrimary"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
             </LinearLayout>
-
+            <TextView
+                android:id="@+id/txt_avatar_circle"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_avatar"
+                android:gravity="center"
+                android:text="AD"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorPrimary" />
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="22dp"
+            android:paddingHorizontal="14dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_search"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search_simple"/>
+            <EditText
+                android:id="@+id/input_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:background="@null"
+                android:singleLine="true"
+                android:hint="Buscar por ticket o título"
+                android:textSize="13sp"
+                android:textColor="@color/textPrimary"
+                android:textColorHint="@color/textSecondary"
+                android:inputType="text" />
+        </LinearLayout>
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="13dp"
+            android:scrollbars="none">
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter_todos"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="Todos"
+                    android:textAllCaps="false"
+                    app:cornerRadius="14dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter_abierto"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:text="Abierto"
+                    android:textAllCaps="false"
+                    app:cornerRadius="14dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter_proceso"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:text="En proceso"
+                    android:textAllCaps="false"
+                    app:cornerRadius="14dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter_resuelto"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:text="Resuelto"
+                    android:textAllCaps="false"
+                    app:cornerRadius="14dp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+        <TextView
+            android:id="@+id/list_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
+            android:text="Cargando incidentes..."
+            android:textColor="@color/textSecondary"
+            android:textSize="13sp" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_incidents"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="92dp"
+            android:clipToPadding="false" />
+    </LinearLayout>
 </FrameLayout>
