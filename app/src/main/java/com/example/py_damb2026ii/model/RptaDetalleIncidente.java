@@ -24,6 +24,13 @@ public class RptaDetalleIncidente {
     public static class Datos {
         public Incidente incidente;
         public List<CambioEstado> historial;
+        public List<Foto> fotos;
+    }
+
+    public static class Foto {
+        public int id;
+        public String ruta_archivo;
+        public String fecha_subida;
     }
 
     public static class Incidente {

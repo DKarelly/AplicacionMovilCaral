@@ -45,6 +45,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import androidx.navigation.Navigation;
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+
+import androidx.core.content.ContextCompat;
+import android.widget.ImageView;
+import android.graphics.drawable.ColorDrawable;
+import com.bumptech.glide.Glide;
 
 public class IncidentDetailFragment extends Fragment {
 
@@ -57,6 +65,9 @@ public class IncidentDetailFragment extends Fragment {
     private boolean tecnicosExpandido = false;
     private String prioridadSeleccionada = "Media";
     private String prioridadOriginal = "Media";
+    private static final int REQUEST_GPS_PERMISSION = 7001;
+
+    private boolean solicitudGpsEnCurso = false;
 
     private final List<RptaObtenerUsuarios.Usuario> tecnicosDisponibles = new ArrayList<>();
 
@@ -124,6 +135,7 @@ public class IncidentDetailFragment extends Fragment {
 
                 mostrarIncidente(rpta.getData().incidente);
                 mostrarHistorial(rpta.getData().historial);
+                mostrarFotos(rpta.getData().fotos);
 
                 if (esAdministrador() && !incidenteFinalizado()) {
                     cargarTecnicosInline();
@@ -200,6 +212,19 @@ public class IncidentDetailFragment extends Fragment {
             binding.detailSubtitle.setText("Solicitante · solo lectura");
             binding.layoutAdminSection.setVisibility(View.GONE);
             binding.btnCambiarEstado.setVisibility(View.GONE);
+        }
+        // SEGUIMIENTO GPS DEL TÉCNICO
+
+        if ("Técnico".equalsIgnoreCase(rol)) {
+
+            if ("En proceso".equalsIgnoreCase(estadoActual)) {
+
+                solicitarPermisoYIniciarSeguimiento();
+
+            } else if (incidenteFinalizado()) {
+
+                detenerServicioGPS();
+            }
         }
     }
 
@@ -1072,6 +1097,254 @@ public class IncidentDetailFragment extends Fragment {
             return fechaApi;
         }
     }
+
+
+    private void solicitarPermisoYIniciarSeguimiento() {
+
+        if (!isAdded() || idIncidenteActual <= 0) return;
+
+        boolean permisoPreciso =
+                ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED;
+
+        boolean permisoAproximado =
+                ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED;
+
+        if (permisoPreciso || permisoAproximado) {
+
+            iniciarServicioGPS();
+            return;
+        }
+
+        if (!solicitudGpsEnCurso) {
+
+            solicitudGpsEnCurso = true;
+
+            requestPermissions(
+                    new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    },
+                    REQUEST_GPS_PERMISSION
+            );
+        }
+    }
+
+
+    private void iniciarServicioGPS() {
+
+        if (!isAdded() || idIncidenteActual <= 0) return;
+
+        Intent intent = new Intent(
+                requireContext(),
+                UbicacionTecnicoService.class
+        );
+
+        intent.setAction(UbicacionTecnicoService.ACTION_INICIAR);
+
+        intent.putExtra(
+                UbicacionTecnicoService.EXTRA_ID_INCIDENTE,
+                idIncidenteActual
+        );
+
+        intent.putExtra(
+                UbicacionTecnicoService.EXTRA_TOKEN,
+                sharedPref.getString("TOKEN_JWT", "")
+        );
+
+        try {
+
+            ContextCompat.startForegroundService(
+                    requireContext(),
+                    intent
+            );
+
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Compartiendo ubicación durante la atención.",
+                    Snackbar.LENGTH_LONG
+            ).show();
+
+        } catch (Exception e) {
+
+            Snackbar.make(
+                    binding.getRoot(),
+                    "No se pudo iniciar el seguimiento GPS: " + e.getMessage(),
+                    Snackbar.LENGTH_LONG
+            ).show();
+        }
+    }
+
+
+    private void detenerServicioGPS() {
+
+        if (!isAdded()) return;
+
+        Intent intent = new Intent(
+                requireContext(),
+                UbicacionTecnicoService.class
+        );
+
+        intent.setAction(UbicacionTecnicoService.ACTION_DETENER);
+
+        intent.putExtra(
+                UbicacionTecnicoService.EXTRA_ID_INCIDENTE,
+                idIncidenteActual
+        );
+
+        requireContext().startService(intent);
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
+        );
+
+        if (requestCode != REQUEST_GPS_PERMISSION) return;
+
+        solicitudGpsEnCurso = false;
+
+        boolean permisoPreciso =
+                ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED;
+
+        boolean permisoAproximado =
+                ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED;
+
+        if (permisoPreciso || permisoAproximado) {
+
+            if ("Técnico".equalsIgnoreCase(
+                    sharedPref.getString("USER_ROLE", ""))
+                    && "En proceso".equalsIgnoreCase(estadoActual)) {
+
+                iniciarServicioGPS();
+            }
+
+        } else {
+
+            if (binding != null) {
+
+                Snackbar.make(
+                        binding.getRoot(),
+                        "Sin permiso GPS. El incidente seguirá funcionando, pero no compartirás tu ubicación.",
+                        Snackbar.LENGTH_LONG
+                ).show();
+            }
+        }
+    }
+
+    private String construirUrlFoto(String ruta) {
+
+        String base = getString(R.string.dominioWS);
+
+        if (!base.endsWith("/")) {
+            base += "/";
+        }
+
+        if (ruta.startsWith("/")) {
+            ruta = ruta.substring(1);
+        }
+
+        return base + ruta;
+    }
+    private void mostrarFotos(List<RptaDetalleIncidente.Foto> fotos) {
+
+        if (binding == null) return;
+
+        LinearLayout contenedor = binding.detailFotosContainer;
+
+        contenedor.removeAllViews();
+
+        if (fotos == null || fotos.isEmpty()) {
+            binding.detailFotosCard.setVisibility(View.GONE);
+            return;
+        }
+
+        int contador = 1;
+
+        for (RptaDetalleIncidente.Foto foto : fotos) {
+
+            if (foto == null ||
+                    foto.ruta_archivo == null ||
+                    foto.ruta_archivo.trim().isEmpty()) {
+                continue;
+            }
+
+            binding.detailFotosCard.setVisibility(View.VISIBLE);
+
+            // Título de la fotografía
+            TextView titulo = new TextView(requireContext());
+
+            titulo.setText("Fotografía " + contador);
+            titulo.setTextColor(Color.parseColor("#5B7487"));
+            titulo.setTextSize(13);
+
+            LinearLayout.LayoutParams tituloParams =
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+
+            tituloParams.bottomMargin = dp(8);
+
+            contenedor.addView(titulo, tituloParams);
+
+            // Imagen
+            ImageView imagen = new ImageView(requireContext());
+
+            LinearLayout.LayoutParams imagenParams =
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            dp(190)
+                    );
+
+            imagenParams.bottomMargin = dp(16);
+
+            imagen.setLayoutParams(imagenParams);
+            imagen.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            imagen.setBackground(
+                    new ColorDrawable(Color.parseColor("#EAF4FB"))
+            );
+
+            contenedor.addView(imagen);
+
+            // Dirección de la imagen en PythonAnywhere
+            String url = construirUrlFoto(foto.ruta_archivo);
+
+            Glide.with(this)
+                    .load(url)
+                    .placeholder(new ColorDrawable(Color.LTGRAY))
+                    .error(new ColorDrawable(Color.LTGRAY))
+                    .centerCrop()
+                    .into(imagen);
+
+            contador++;
+        }
+
+        if (contador == 1) {
+            binding.detailFotosCard.setVisibility(View.GONE);
+        }
+    }
+
 
     private int dp(int valor) {
         return (int) (valor * requireContext().getResources().getDisplayMetrics().density);

@@ -82,7 +82,7 @@ public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<Incide
 
     @Override
     public int getItemCount() {
-        return listaFiltrada.size();
+        return incidentList != null ? incidentList.size() : 0;
     }
 
     private String valorSeguro(String valor) {

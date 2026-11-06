@@ -201,14 +201,71 @@
 
         </LinearLayout>
 
+
         <!-- FOTOGRAFÍAS -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Fotografías adjuntas: disponible en una siguiente etapa"
-            android:textSize="12sp"
-            android:textColor="@color/textSecondary"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="18dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Fotos adjuntas"
+                android:textColor="@color/textSecondary"
+                android:textSize="12sp"/>
+
+            <TextView
+                android:id="@+id/fotos_contador"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 2"
+                android:textColor="@color/colorPrimary"
+                android:textSize="12sp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/fotos_preview_container"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <!-- BOTÓN AGREGAR FOTOGRAFÍA -->
+            <LinearLayout
+                android:id="@+id/btn_agregar_foto"
+                android:layout_width="76dp"
+                android:layout_height="80dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_photo_add"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/icono_agregar_foto"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_menu_camera"
+                    app:tint="#91A6B3"/>
+
+                <TextView
+                    android:id="@+id/txt_agregar_foto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Añadir"
+                    android:textColor="#91A6B3"
+                    android:textSize="10sp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
 
         <!-- ENVIAR -->
         <com.google.android.material.button.MaterialButton
