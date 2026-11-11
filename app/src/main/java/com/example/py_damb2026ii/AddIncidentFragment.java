@@ -21,8 +21,12 @@ import com.example.py_damb2026ii.databinding.FragmentAddIncidentBinding;
 import com.example.py_damb2026ii.model.RequInsertarIncidente;
 import com.example.py_damb2026ii.model.RptaInsertarIncidente;
 import com.example.py_damb2026ii.model.RptaObtenerSucursales;
+import com.example.py_damb2026ii.model.RptaObtenerActivoQR;
 import com.example.py_damb2026ii.network.SucursalEntry;
+import com.example.py_damb2026ii.util.QrHelper;
+import com.example.py_damb2026ii.util.SesionHelper;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
 
 import java.util.List;
 
@@ -71,6 +75,7 @@ public class AddIncidentFragment extends Fragment {
     private SharedPreferences sharedPref;
     private List<SucursalEntry> listaSucursales;
     private SucursalEntry sucursalSeleccionada;
+    private Integer idActivoSeleccionado = null;
     // ========================================
 // FOTOGRAFIAS DEL INCIDENTE
 // ========================================
@@ -146,6 +151,30 @@ public class AddIncidentFragment extends Fragment {
 
         // No puede registrar nuevas sucursales
         binding.btnIrRegistrarSucursal.setVisibility(View.GONE);
+
+        binding.cardEscanearEquipo.setOnClickListener(v -> {
+            if (idActivoSeleccionado != null) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Activo seleccionado")
+                        .setMessage("¿Deseas desvincular el activo actual?")
+                        .setPositiveButton("Quitar", (dialog, which) -> {
+                            idActivoSeleccionado = null;
+                            binding.txtEstadoActivo.setText("Identifica el activo con QR · Toca para escanear");
+                            Snackbar.make(binding.getRoot(), "Activo desvinculado", Snackbar.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancelar", null)
+                        .show();
+            } else {
+                QrHelper.escanearQr(requireContext(), new QrHelper.OnQrScannedListener() {
+                    @Override
+                    public void onScanned(String rawValue) {
+                        consultarActivoQR(rawValue);
+                    }
+                    @Override public void onError(Exception e) {}
+                    @Override public void onCancelled() {}
+                });
+            }
+        });
 
         binding.addIncidentButton.setOnClickListener(v -> insertarIncidente(() -> {
             Snackbar.make(binding.getRoot(), "Incidente registrado correctamente", Snackbar.LENGTH_LONG)
@@ -396,6 +425,11 @@ public class AddIncidentFragment extends Fragment {
 
         campos.put("prioridad",
                 RequestBody.create(tipoTexto, prioridad));
+
+        if (idActivoSeleccionado != null) {
+            campos.put("id_activo",
+                    RequestBody.create(tipoTexto, String.valueOf(idActivoSeleccionado)));
+        }
 
 
 
@@ -828,6 +862,55 @@ public class AddIncidentFragment extends Fragment {
         }
 
         return partes;
+    }
+
+    private void consultarActivoQR(String codigoQR) {
+        JCPyAnyApi api = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(JCPyAnyApi.class);
+
+        String token = sharedPref.getString("TOKEN_JWT", "");
+        api.obtenerActivoQR("JWT " + token, codigoQR).enqueue(new Callback<RptaObtenerActivoQR>() {
+            @Override
+            public void onResponse(@NonNull Call<RptaObtenerActivoQR> call, @NonNull Response<RptaObtenerActivoQR> response) {
+                if (!isAdded() || binding == null) return;
+                if (response.code() == 401) {
+                    SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    String errorMsg = "Activo no encontrado";
+                    try {
+                        if (response.errorBody() != null) {
+                            RptaObtenerActivoQR errBody = new Gson().fromJson(response.errorBody().charStream(), RptaObtenerActivoQR.class);
+                            if (errBody != null && errBody.getMsge() != null) {
+                                errorMsg = errBody.getMsge();
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                    Snackbar.make(binding.getRoot(), errorMsg, Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+
+                RptaObtenerActivoQR rpta = response.body();
+                if (rpta.getCode() == 1 && rpta.getData() != null) {
+                    idActivoSeleccionado = rpta.getData().id;
+                    binding.txtEstadoActivo.setText(rpta.getData().nombre + " (" + rpta.getData().tipo + ")");
+                    Snackbar.make(binding.getRoot(), "Activo vinculado correctamente", Snackbar.LENGTH_SHORT).show();
+                } else {
+                    Snackbar.make(binding.getRoot(), rpta.getMsge() != null ? rpta.getMsge() : "Activo no encontrado", Snackbar.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RptaObtenerActivoQR> call, @NonNull Throwable t) {
+                if (!isAdded() || binding == null) return;
+                Snackbar.make(binding.getRoot(), "Error de conexión al buscar activo", Snackbar.LENGTH_SHORT).show();
+            }
+        });
     }
 
 }

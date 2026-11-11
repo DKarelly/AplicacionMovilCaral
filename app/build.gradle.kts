@@ -54,4 +54,5 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation("com.google.android.gms:play-services-location:21.4.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 }

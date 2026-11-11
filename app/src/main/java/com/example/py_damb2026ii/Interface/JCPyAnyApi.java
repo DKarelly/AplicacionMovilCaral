@@ -11,6 +11,7 @@ import com.example.py_damb2026ii.model.RptaInsertarSucursal;
 import com.example.py_damb2026ii.model.RptaObtenerDiscos;
 import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.model.RptaObtenerSucursales;
+import com.example.py_damb2026ii.model.RptaObtenerActivoQR;
 import com.example.py_damb2026ii.model.RptaDetalleIncidente;
 import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
 import com.example.py_damb2026ii.model.RequInsertarUsuario;
@@ -50,6 +51,12 @@ public interface JCPyAnyApi {
     // Incidentes (según Flask API)
     @GET("api_obtenerIncidentes")
     Call<RptaObtenerIncidentes> obtenerIncidentes(@Header("Authorization") String authorization);
+
+    @GET("api_obtenerActivoQR/{p_codigo_qr}")
+    Call<RptaObtenerActivoQR> obtenerActivoQR(
+            @Header("Authorization") String authorization,
+            @Path("p_codigo_qr") String codigoQR
+    );
 
 
     @GET("api_obtenerIncidente/{p_id}")

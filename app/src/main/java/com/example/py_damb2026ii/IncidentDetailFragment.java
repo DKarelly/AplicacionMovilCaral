@@ -25,8 +25,12 @@ import com.example.py_damb2026ii.databinding.FragmentIncidentDetailBinding;
 import com.example.py_damb2026ii.model.RptaDetalleIncidente;
 import com.example.py_damb2026ii.model.RptaInsertarIncidente;
 import com.example.py_damb2026ii.model.RptaObtenerUsuarios;
+import com.example.py_damb2026ii.model.RptaObtenerActivoQR;
+import com.example.py_damb2026ii.util.QrHelper;
+import com.example.py_damb2026ii.util.SesionHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
@@ -62,6 +66,7 @@ public class IncidentDetailFragment extends Fragment {
     private int idIncidenteActual = -1;
     private String estadoActual = "";
     private int selectedTecnicoId = -1;
+    private Integer idActivoIncidenteActual = null;
     private boolean tecnicosExpandido = false;
     private String prioridadSeleccionada = "Media";
     private String prioridadOriginal = "Media";
@@ -87,6 +92,17 @@ public class IncidentDetailFragment extends Fragment {
         binding.btnCambiarEstado.setOnClickListener(v -> mostrarDialogoCambioEstado());
         binding.btnGuardarCambios.setOnClickListener(v -> guardarCambiosAdmin());
         binding.btnCerrarIncidente.setOnClickListener(v -> cerrarIncidenteAdmin());
+
+        binding.btnVerificarEquipo.setOnClickListener(v -> {
+            QrHelper.escanearQr(requireContext(), new QrHelper.OnQrScannedListener() {
+                @Override
+                public void onScanned(String rawValue) {
+                    verificarActivoEscaneado(rawValue, idActivoIncidenteActual);
+                }
+                @Override public void onError(Exception e) {}
+                @Override public void onCancelled() {}
+            });
+        });
 
         binding.btnPriorityAlta.setOnClickListener(v -> seleccionarPrioridad("Alta"));
         binding.btnPriorityMedia.setOnClickListener(v -> seleccionarPrioridad("Media"));
@@ -187,6 +203,7 @@ public class IncidentDetailFragment extends Fragment {
         actualizarBotonesPrioridad();
 
         selectedTecnicoId = incidente.id_tecnico != null ? incidente.id_tecnico : -1;
+        idActivoIncidenteActual = incidente.id_activo;
 
         String rol = sharedPref.getString("USER_ROLE", "");
 
@@ -195,6 +212,7 @@ public class IncidentDetailFragment extends Fragment {
 
             binding.detailSubtitle.setVisibility(View.GONE);
             binding.btnCambiarEstado.setVisibility(View.GONE);
+            binding.btnVerificarEquipo.setVisibility(View.GONE);
 
             if (incidenteFinalizado()) {
                 binding.layoutAdminSection.setVisibility(View.GONE);
@@ -213,10 +231,12 @@ public class IncidentDetailFragment extends Fragment {
             binding.btnCambiarEstado.setVisibility(
                     puedeCambiar ? View.VISIBLE : View.GONE
             );
+            binding.btnVerificarEquipo.setVisibility(View.VISIBLE);
         } else {
             binding.detailSubtitle.setText("Solicitante · solo lectura");
             binding.layoutAdminSection.setVisibility(View.GONE);
             binding.btnCambiarEstado.setVisibility(View.GONE);
+            binding.btnVerificarEquipo.setVisibility(View.GONE);
         }
         // SEGUIMIENTO GPS DEL TÉCNICO
 
@@ -1380,5 +1400,61 @@ public class IncidentDetailFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    private void verificarActivoEscaneado(String codigoQR, Integer idActivoEsperado) {
+        if (idActivoEsperado == null || idActivoEsperado <= 0) {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Verificación de Equipo")
+                    .setMessage("Este incidente no tiene un equipo asociado")
+                    .setPositiveButton("Aceptar", null)
+                    .show();
+            return;
+        }
+
+        JCPyAnyApi api = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(JCPyAnyApi.class);
+
+        String token = sharedPref.getString("TOKEN_JWT", "");
+        api.obtenerActivoQR("JWT " + token, codigoQR).enqueue(new Callback<RptaObtenerActivoQR>() {
+            @Override
+            public void onResponse(@NonNull Call<RptaObtenerActivoQR> call, @NonNull Response<RptaObtenerActivoQR> response) {
+                if (!isAdded() || binding == null) return;
+                if (response.code() == 401) {
+                    SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+                if (!response.isSuccessful() || response.body() == null) {
+                    Snackbar.make(binding.getRoot(), "Activo no encontrado", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+                RptaObtenerActivoQR rpta = response.body();
+                if (rpta.getCode() == 1 && rpta.getData() != null) {
+                    RptaObtenerActivoQR.ActivoQR activo = rpta.getData();
+                    String mensaje;
+                    if (activo.id == idActivoEsperado) {
+                        mensaje = "Equipo correcto: " + activo.nombre;
+                    } else {
+                        mensaje = "El equipo escaneado no coincide con el del incidente";
+                    }
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Verificación de Equipo")
+                            .setMessage(mensaje)
+                            .setPositiveButton("Aceptar", null)
+                            .show();
+                } else {
+                    Snackbar.make(binding.getRoot(), rpta.getMsge() != null ? rpta.getMsge() : "Activo no encontrado", Snackbar.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RptaObtenerActivoQR> call, @NonNull Throwable t) {
+                if (!isAdded() || binding == null) return;
+                Snackbar.make(binding.getRoot(), "Error de red al verificar", Snackbar.LENGTH_SHORT).show();
+            }
+        });
     }
 }

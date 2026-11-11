@@ -408,5 +408,16 @@
             app:cornerRadius="26dp"
             android:textColor="@android:color/white" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_verificar_equipo"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:text="Verificar equipo"
+            android:visibility="gone"
+            app:backgroundTint="?attr/colorPrimary"
+            app:cornerRadius="26dp"
+            android:textColor="@android:color/white" />
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

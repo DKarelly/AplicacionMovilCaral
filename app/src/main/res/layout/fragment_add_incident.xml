@@ -18,11 +18,14 @@
 
         <!-- ESCANEAR EQUIPO -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_escanear_equipo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="20dp"
             app:cardBackgroundColor="@color/colorPrimary"
-            app:cardElevation="2dp">
+            app:cardElevation="2dp"
+            android:clickable="true"
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -53,9 +56,10 @@
                         android:textSize="15sp"/>
 
                     <TextView
+                        android:id="@+id/txt_estado_activo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Identifica el activo con QR · Próximamente"
+                        android:text="Identifica el activo con QR · Toca para escanear"
                         android:textColor="@color/white"
                         android:textSize="12sp"/>
 
