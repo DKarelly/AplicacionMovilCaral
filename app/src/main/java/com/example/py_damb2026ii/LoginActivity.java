@@ -17,7 +17,12 @@ import com.example.py_damb2026ii.Interface.JCPyAnyApi;
 import com.example.py_damb2026ii.databinding.ActivityLoginBinding;
 import com.example.py_damb2026ii.model.RequAuth;
 import com.example.py_damb2026ii.model.RptaAuth;
+import com.example.py_damb2026ii.model.RptaInsertarIncidente;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -163,6 +168,15 @@ public class LoginActivity extends AppCompatActivity {
                             .putString("USER_NAME", r.getNombreVisible(usuario))
                             .apply();
 
+                    final String jwtToken = r.getAccess_token();
+                    FirebaseMessaging.getInstance().getToken()
+                            .addOnSuccessListener(token -> {
+                                if (token != null && !token.isEmpty()) {
+                                    prefs.edit().putString("FCM_TOKEN", token).apply();
+                                    registrarFcmTokenServidor(jwtToken, token);
+                                }
+                            });
+
                     Intent intent = new Intent(
                             LoginActivity.this,
                             MainActivity.class
@@ -219,6 +233,24 @@ public class LoginActivity extends AppCompatActivity {
         binding.loginTitle.setText(titulo);
     }
 
+
+    private void registrarFcmTokenServidor(String jwtToken, String fcmToken) {
+        JCPyAnyApi api = new Retrofit.Builder()
+                .baseUrl(getString(R.string.dominioWS))
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(JCPyAnyApi.class);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("fcm_token", fcmToken);
+
+        api.registrarFcmToken("JWT " + jwtToken, body).enqueue(new Callback<RptaInsertarIncidente>() {
+            @Override
+            public void onResponse(@NonNull Call<RptaInsertarIncidente> call, @NonNull Response<RptaInsertarIncidente> response) {}
+            @Override
+            public void onFailure(@NonNull Call<RptaInsertarIncidente> call, @NonNull Throwable t) {}
+        });
+    }
 
     private void mostrarError(String mensaje) {
 

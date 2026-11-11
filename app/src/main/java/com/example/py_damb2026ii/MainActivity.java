@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import com.example.py_damb2026ii.databinding.ActivityMainBinding;
+import com.example.py_damb2026ii.util.SesionHelper;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -262,6 +263,9 @@ public class MainActivity extends AppCompatActivity {
 
                     invalidateOptionsMenu();
                 });
+
+        solicitarPermisoNotificaciones();
+        procesarIntentNotificacion(getIntent());
     }
 
     // Comprobar el rol del administrador de empresa.
@@ -300,6 +304,14 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Salir", (d,w) -> { salir(); }).show();
     }
     private void salir() {
+        String jwt = prefs != null ? prefs.getString("TOKEN_JWT", "") : "";
+        if (!jwt.isEmpty()) {
+            SesionHelper.eliminarFcmTokenServidor(this, jwt);
+        }
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().deleteToken();
+        } catch (Exception ignored) {}
+
         if (prefs != null) {
             prefs.edit().clear().apply();
         } else {
@@ -315,6 +327,43 @@ public class MainActivity extends AppCompatActivity {
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(i); 
         finish();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        procesarIntentNotificacion(intent);
+    }
+
+    private void procesarIntentNotificacion(Intent intent) {
+        if (intent == null || navController == null) return;
+        int idIncidente = intent.getIntExtra("id_incidente", -1);
+        if (idIncidente <= 0 && prefs != null) {
+            idIncidente = prefs.getInt("PENDING_INCIDENT_ID", -1);
+            if (idIncidente > 0) {
+                prefs.edit().remove("PENDING_INCIDENT_ID").apply();
+            }
+        }
+        if (idIncidente > 0) {
+            Bundle args = new Bundle();
+            args.putInt("id_incidente", idIncidente);
+            try {
+                navController.navigate(R.id.IncidentDetailFragment, args);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private void solicitarPermisoNotificaciones() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                registerForActivityResult(
+                        new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+                        isGranted -> {}
+                ).launch(android.Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
     @Override public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu); return true;

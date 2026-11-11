@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658951260829",
+    "project_id": "incidenteapp",
+    "storage_bucket": "incidenteapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658951260829:android:f0411d013be78ffa3da274",
+        "android_client_info": {
+          "package_name": "com.example.py_damb2026ii"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_He0Xj9GDZJ1DcMaQu0bD2w_cKjF_iuA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

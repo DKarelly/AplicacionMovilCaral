@@ -139,4 +139,15 @@ public interface JCPyAnyApi {
             @Body RequInsertarUsuario usuario
     );
 
+    @POST("api_registrarFcmToken")
+    Call<RptaInsertarIncidente> registrarFcmToken(
+            @Header("Authorization") String authorization,
+            @Body Map<String, String> body
+    );
+
+    @POST("api_eliminarFcmToken")
+    Call<RptaInsertarIncidente> eliminarFcmToken(
+            @Header("Authorization") String authorization
+    );
+
 }
