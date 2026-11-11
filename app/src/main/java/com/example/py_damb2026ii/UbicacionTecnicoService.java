@@ -248,6 +248,13 @@ public class UbicacionTecnicoService extends Service {
                             "Error HTTP: " + response.code()
                     );
 
+                    if (response.code() == 401) {
+                        com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(getApplicationContext());
+                        detenerSeguimiento(true);
+                        stopSelf();
+                        return;
+                    }
+
                     // El servidor indica que el incidente
                     // ya no está en proceso.
                     if (response.code() == 409) {

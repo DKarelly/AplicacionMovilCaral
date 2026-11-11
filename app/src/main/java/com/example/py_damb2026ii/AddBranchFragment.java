@@ -140,6 +140,11 @@ public class AddBranchFragment extends Fragment {
 
                 if (!isAdded() || binding == null) return;
 
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+
                 binding.addBranchButton.setEnabled(true);
 
                 RptaInsertarSucursal rpta = response.body();

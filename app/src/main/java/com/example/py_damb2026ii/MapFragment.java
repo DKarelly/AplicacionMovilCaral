@@ -256,6 +256,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
                 if (binding == null || mMap == null) return;
 
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+
                 if (!response.isSuccessful()) {
                     mostrarMensaje(
                             "Error al cargar sucursales: " + response.code()
@@ -319,6 +324,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                             @NonNull Response<RptaObtenerUbicacionesTecnicos> response) {
 
                         if (!isAdded() || binding == null || mMap == null) {
+                            return;
+                        }
+
+                        if (response.code() == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
                             return;
                         }
 
@@ -874,6 +884,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                             @NonNull Response<RptaObtenerIncidentes> response) {
 
                         if (!isAdded() || binding == null) return;
+
+                        if (response.code() == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                            return;
+                        }
 
                         RptaObtenerIncidentes rpta = response.body();
 

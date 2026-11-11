@@ -210,9 +210,14 @@ public class AddIncidentFragment extends Fragment {
                     @NonNull Call<RptaObtenerSucursales> call,
                     @NonNull Response<RptaObtenerSucursales> response) {
 
-                Log.d("USAT_APP", "HTTP sucursales: " + response.code());
-
                 if (!isAdded() || binding == null) return;
+
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+
+                Log.d("USAT_APP", "HTTP sucursales: " + response.code());
 
                 if (!response.isSuccessful() || response.body() == null) {
                     Snackbar.make(binding.getRoot(),
@@ -432,6 +437,11 @@ public class AddIncidentFragment extends Fragment {
                     @NonNull Response<RptaInsertarIncidente> response) {
 
                 if (!isAdded() || binding == null) return;
+
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
 
                 binding.addIncidentButton.setEnabled(true);
                 binding.addIncidentButton.setText("Enviar incidente");

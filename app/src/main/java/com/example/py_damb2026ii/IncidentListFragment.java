@@ -167,6 +167,10 @@ public class IncidentListFragment extends Fragment {
         api.obtenerIncidentes("JWT "+token).enqueue(new Callback<RptaObtenerIncidentes>(){
             @Override public void onResponse(@NonNull Call<RptaObtenerIncidentes> c,@NonNull Response<RptaObtenerIncidentes> r){
                 if(binding==null||!isAdded())return;
+                if(r.code()==401){
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
                 RptaObtenerIncidentes body=r.body();
                 if(!r.isSuccessful()||body==null||body.getCode()!=1||body.getData()==null){
                     binding.listMessage.setVisibility(View.VISIBLE);

@@ -131,6 +131,11 @@ public class AddCollaboratorFragment extends Fragment {
 
                         if (!isAdded() || binding == null) return;
 
+                        if (response.code() == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                            return;
+                        }
+
                         RptaObtenerSucursales rpta = response.body();
 
                         if (!response.isSuccessful()
@@ -264,6 +269,11 @@ public class AddCollaboratorFragment extends Fragment {
                             @NonNull Response<RptaInsertarUsuario> response) {
 
                         if (!isAdded() || binding == null) return;
+
+                        if (response.code() == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                            return;
+                        }
 
                         binding.btnSaveCollaborator.setEnabled(true);
 

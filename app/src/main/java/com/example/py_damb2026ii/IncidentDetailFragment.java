@@ -121,6 +121,11 @@ public class IncidentDetailFragment extends Fragment {
 
                 if (!isAdded() || binding == null) return;
 
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+
                 if (!response.isSuccessful() || response.body() == null) {
                     mostrarError("Error HTTP: " + response.code());
                     return;
@@ -358,6 +363,11 @@ public class IncidentDetailFragment extends Fragment {
                     @NonNull Response<RptaObtenerUsuarios> response) {
 
                 if (!isAdded() || binding == null) return;
+
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
 
                 if (!response.isSuccessful() || response.body() == null) {
 
@@ -818,6 +828,12 @@ public class IncidentDetailFragment extends Fragment {
                     return;
                 }
 
+                if (response.code() == 401) {
+                    dialogo.dismiss();
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
+
                 RptaInsertarIncidente rpta = response.body();
 
                 if (response.isSuccessful() && rpta != null && rpta.getCode() == 1) {
@@ -884,6 +900,11 @@ public class IncidentDetailFragment extends Fragment {
                     @NonNull Response<RptaInsertarIncidente> response) {
 
                 if (!isAdded() || binding == null) return;
+
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
 
                 RptaInsertarIncidente rpta = response.body();
 
@@ -958,6 +979,11 @@ public class IncidentDetailFragment extends Fragment {
                     @NonNull Response<RptaInsertarIncidente> response) {
 
                 if (!isAdded() || binding == null) return;
+
+                if (response.code() == 401) {
+                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                    return;
+                }
 
                 binding.btnGuardarCambios.setEnabled(true);
 

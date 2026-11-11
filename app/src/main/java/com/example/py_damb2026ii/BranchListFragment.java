@@ -264,6 +264,11 @@ public class BranchListFragment extends Fragment {
 
                         if (!isAdded() || binding == null) return;
 
+                        if (response.code() == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                            return;
+                        }
+
                         RptaObtenerSucursales rpta = response.body();
 
                         if (!response.isSuccessful()
@@ -327,6 +332,11 @@ public class BranchListFragment extends Fragment {
                             @NonNull Response<RptaObtenerUsuarios> response) {
 
                         if (!isAdded() || binding == null) return;
+
+                        if (response.code() == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                            return;
+                        }
 
                         RptaObtenerUsuarios rpta = response.body();
 

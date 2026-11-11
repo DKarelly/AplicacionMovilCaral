@@ -297,12 +297,24 @@ public class MainActivity extends AppCompatActivity {
         new AlertDialog.Builder(this).setTitle("Cerrar sesión")
                 .setMessage("¿Deseas salir de IncidentApp?")
                 .setNegativeButton("Cancelar", null)
-                .setPositiveButton("Salir", (d,w) -> { prefs.edit().clear().apply(); salir(); }).show();
+                .setPositiveButton("Salir", (d,w) -> { salir(); }).show();
     }
     private void salir() {
+        if (prefs != null) {
+            prefs.edit().clear().apply();
+        } else {
+            getSharedPreferences("USAT_SP", Context.MODE_PRIVATE).edit().clear().apply();
+        }
+
+        try {
+            Intent serviceIntent = new Intent(this, UbicacionTecnicoService.class);
+            stopService(serviceIntent);
+        } catch (Exception ignored) {}
+
         Intent i = new Intent(this, LoginActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(i); finish();
+        startActivity(i); 
+        finish();
     }
     @Override public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu); return true;

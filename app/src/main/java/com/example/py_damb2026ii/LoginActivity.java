@@ -35,6 +35,15 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        SharedPreferences checkPrefs = getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
+        String tokenPersistente = checkPrefs.getString("TOKEN_JWT", "");
+        if (!tokenPersistente.isEmpty()) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         getWindow().setStatusBarColor(
                 getColor(R.color.productGridBackgroundColor));
 
