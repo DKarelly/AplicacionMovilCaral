@@ -76,6 +76,7 @@ public class AddIncidentFragment extends Fragment {
     private List<SucursalEntry> listaSucursales;
     private SucursalEntry sucursalSeleccionada;
     private Integer idActivoSeleccionado = null;
+    private String codigoQrPendiente = null;
     // ========================================
 // FOTOGRAFIAS DEL INCIDENTE
 // ========================================
@@ -153,12 +154,13 @@ public class AddIncidentFragment extends Fragment {
         binding.btnIrRegistrarSucursal.setVisibility(View.GONE);
 
         binding.cardEscanearEquipo.setOnClickListener(v -> {
-            if (idActivoSeleccionado != null) {
+            if (idActivoSeleccionado != null || codigoQrPendiente != null) {
                 new MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Activo seleccionado")
                         .setMessage("¿Deseas desvincular el activo actual?")
                         .setPositiveButton("Quitar", (dialog, which) -> {
                             idActivoSeleccionado = null;
+                            codigoQrPendiente = null;
                             binding.txtEstadoActivo.setText("Identifica el activo con QR · Toca para escanear");
                             Snackbar.make(binding.getRoot(), "Activo desvinculado", Snackbar.LENGTH_SHORT).show();
                         })
@@ -248,46 +250,17 @@ public class AddIncidentFragment extends Fragment {
 
                 Log.d("USAT_APP", "HTTP sucursales: " + response.code());
 
-                if (!response.isSuccessful() || response.body() == null) {
-                    Snackbar.make(binding.getRoot(),
-                            "Error al consultar sucursales. HTTP " + response.code(),
-                            Snackbar.LENGTH_LONG).show();
+                if (!response.isSuccessful() || response.body() == null || response.body().getCode() != 1 || response.body().getData() == null || response.body().getData().isEmpty()) {
+                    usarSucursalOffline();
                     return;
                 }
 
-                RptaObtenerSucursales rpta = response.body();
-
-                Log.d("USAT_APP", "Código API: " + rpta.getCode());
-                Log.d("USAT_APP", "Mensaje: " + rpta.getMsge());
-
-                if (rpta.getCode() != 1) {
-                    Snackbar.make(binding.getRoot(),
-                            "Error: " + rpta.getMsge(),
-                            Snackbar.LENGTH_LONG).show();
-                    return;
-                }
-
-                listaSucursales = rpta.getData();
-
-                if (listaSucursales == null || listaSucursales.isEmpty()) {
-                    sucursalSeleccionada = null;
-
-                    Snackbar.make(binding.getRoot(),
-                            "Tu cuenta no tiene una sucursal asignada. Contacta al administrador.",
-                            Snackbar.LENGTH_LONG).show();
-
-                    return;
-                }
-
-                if (listaSucursales.size() != 1) {
-                    sucursalSeleccionada = null;
-
-                    Snackbar.make(binding.getRoot(),
-                            "Error en la asignación de sucursal. Contacta al administrador.",
-                            Snackbar.LENGTH_LONG).show();
-
-                    return;
-                }
+                listaSucursales = response.body().getData();
+                sucursalSeleccionada = listaSucursales.get(0);
+                sharedPref.edit()
+                        .putInt("USER_ID_SUCURSAL", sucursalSeleccionada.id)
+                        .putString("USER_SUCURSAL_NOMBRE", sucursalSeleccionada.nombre)
+                        .apply();
 
                 ArrayAdapter<SucursalEntry> adapter =
                         new ArrayAdapter<>(
@@ -301,8 +274,6 @@ public class AddIncidentFragment extends Fragment {
                 );
 
                 binding.sucursalSpinner.setAdapter(adapter);
-
-                sucursalSeleccionada = listaSucursales.get(0);
 
                 binding.sucursalSpinner.setOnItemSelectedListener(
                         new AdapterView.OnItemSelectedListener() {
@@ -328,7 +299,6 @@ public class AddIncidentFragment extends Fragment {
                 Log.d("USAT_APP",
                         "Sucursales cargadas: " + listaSucursales.size());
 
-
             }
 
             @Override
@@ -337,15 +307,26 @@ public class AddIncidentFragment extends Fragment {
                     @NonNull Throwable throwable) {
 
                 Log.e("USAT_APP",
-                        "Error obteniendo sucursales", throwable);
-
-                if (isAdded() && binding != null) {
-                    Snackbar.make(binding.getRoot(),
-                            "No se pudieron cargar las sucursales",
-                            Snackbar.LENGTH_LONG).show();
-                }
+                        "Error obteniendo sucursales (offline/red)", throwable);
+                usarSucursalOffline();
             }
         });
+    }
+
+    private void usarSucursalOffline() {
+        if (!isAdded() || binding == null) return;
+        int idSaved = sharedPref.getInt("USER_ID_SUCURSAL", 1);
+        String nombreSaved = sharedPref.getString("USER_SUCURSAL_NOMBRE", "Sucursal asignada");
+        sucursalSeleccionada = new SucursalEntry(idSaved, nombreSaved, "", 0.0, 0.0, 1);
+        List<SucursalEntry> list = new ArrayList<>();
+        list.add(sucursalSeleccionada);
+        ArrayAdapter<SucursalEntry> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                list
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.sucursalSpinner.setAdapter(adapter);
     }
 
 
@@ -374,10 +355,7 @@ public class AddIncidentFragment extends Fragment {
 
 // Validar sucursal
         if (sucursalSeleccionada == null) {
-            Snackbar.make(binding.getRoot(),
-                    "Seleccione una sucursal",
-                    Snackbar.LENGTH_LONG).show();
-            return;
+            usarSucursalOffline();
         }
 
 // Obtener categoría
@@ -455,81 +433,58 @@ public class AddIncidentFragment extends Fragment {
         binding.addIncidentButton.setEnabled(false);
         binding.addIncidentButton.setText("Enviando...");
 
-// Enviar incidente y fotografías
-        Call<RptaInsertarIncidente> call =
-                jcPyAnyApi.insertarIncidente(
-                        "JWT " + token,
-                        campos,
-                        partesFotos
-                );
+        String idUsuario = sharedPref.getString("USER_NAME", "user_cache");
 
+        com.example.py_damb2026ii.repository.IncidentRepository.getInstance().registrarIncidente(
+                requireContext(),
+                token,
+                idUsuario,
+                titulo,
+                descripcion,
+                categoria,
+                prioridad,
+                sucursalSeleccionada != null ? sucursalSeleccionada.id : 1,
+                idActivoSeleccionado,
+                codigoQrPendiente,
+                fotosSeleccionadas,
+                new com.example.py_damb2026ii.repository.IncidentRepository.RepositoryCallback<RptaInsertarIncidente>() {
+                    @Override
+                    public void onDataLoaded(RptaInsertarIncidente data, boolean isFromCache, String errorMessage) {
+                        if (!isAdded() || binding == null) return;
+                        binding.addIncidentButton.setEnabled(true);
+                        binding.addIncidentButton.setText("Enviar incidente");
 
-        call.enqueue(new Callback<RptaInsertarIncidente>() {
-            @Override
-            public void onResponse(
-                    @NonNull Call<RptaInsertarIncidente> call,
-                    @NonNull Response<RptaInsertarIncidente> response) {
-
-                if (!isAdded() || binding == null) return;
-
-                if (response.code() == 401) {
-                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
-                    return;
-                }
-
-                binding.addIncidentButton.setEnabled(true);
-                binding.addIncidentButton.setText("Enviar incidente");
-
-                if (!response.isSuccessful()) {
-
-                    Snackbar.make(
-                            binding.getRoot(),
-                            "Error HTTP: " + response.code(),
-                            Snackbar.LENGTH_LONG
-                    ).show();
-
-                    return;
-                }
-
-                RptaInsertarIncidente rpta = response.body();
-
-                if (rpta != null && rpta.getCode() == 1) {
-
-                    if (transaccionOK != null) {
-                        transaccionOK.run();
+                        if (isFromCache) {
+                            Snackbar.make(binding.getRoot(),
+                                    errorMessage != null ? errorMessage : "Sin conexión: se enviará automáticamente al recuperar internet",
+                                    Snackbar.LENGTH_LONG).show();
+                            if (transaccionOK != null) {
+                                transaccionOK.run();
+                            }
+                        } else if (data != null && data.getCode() == 1) {
+                            if (transaccionOK != null) {
+                                transaccionOK.run();
+                            }
+                        } else {
+                            Snackbar.make(binding.getRoot(),
+                                    errorMessage != null ? errorMessage : "Error al registrar incidente",
+                                    Snackbar.LENGTH_LONG).show();
+                        }
                     }
 
-                } else {
-
-                    String mensaje = rpta != null
-                            ? rpta.getMsge()
-                            : "No se recibió respuesta del servidor.";
-
-                    Snackbar.make(
-                            binding.getRoot(),
-                            mensaje,
-                            Snackbar.LENGTH_LONG
-                    ).show();
+                    @Override
+                    public void onHttpError(int code) {
+                        if (!isAdded() || binding == null) return;
+                        binding.addIncidentButton.setEnabled(true);
+                        binding.addIncidentButton.setText("Enviar incidente");
+                        if (code == 401) {
+                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+                        } else {
+                            Snackbar.make(binding.getRoot(), "Error HTTP: " + code, Snackbar.LENGTH_LONG).show();
+                        }
+                    }
                 }
-            }
-
-            @Override
-            public void onFailure(
-                    @NonNull Call<RptaInsertarIncidente> call,
-                    @NonNull Throwable throwable) {
-
-                if (!isAdded() || binding == null) return;
-
-                binding.addIncidentButton.setEnabled(true);
-                binding.addIncidentButton.setText("Enviar incidente");
-
-                Snackbar.make(
-                        binding.getRoot(),
-                        "Error de conexión: " + throwable.getMessage(),
-                        Snackbar.LENGTH_LONG
-                ).show();
-            }
-        });
+        );
     }
 
     private void mostrarOpcionesFoto() {
@@ -908,7 +863,9 @@ public class AddIncidentFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<RptaObtenerActivoQR> call, @NonNull Throwable t) {
                 if (!isAdded() || binding == null) return;
-                Snackbar.make(binding.getRoot(), "Error de conexión al buscar activo", Snackbar.LENGTH_SHORT).show();
+                codigoQrPendiente = codigoQR;
+                idActivoSeleccionado = null;
+                binding.txtEstadoActivo.setText("Activo: " + codigoQR + " (se validará al sincronizar)");
             }
         });
     }

@@ -10,11 +10,13 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.py_damb2026ii.Interface.JCPyAnyApi;
 import com.example.py_damb2026ii.databinding.FragmentIncidentListBinding;
 import com.example.py_damb2026ii.model.RptaObtenerIncidentes;
 import com.example.py_damb2026ii.network.IncidentEntry;
+import com.example.py_damb2026ii.viewmodel.IncidentListViewModel;
 import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +31,28 @@ public class IncidentListFragment extends Fragment {
     private FragmentIncidentListBinding binding;
     private SharedPreferences prefs;
     private IncidentCardRecyclerViewAdapter adapter;
+    private IncidentListViewModel viewModel;
     private final List<IncidentEntry> datos = new ArrayList<>();
     private String filtro="Todos";
     @Override public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding=FragmentIncidentListBinding.inflate(inflater,container,false);
         prefs=requireActivity().getSharedPreferences("USAT_SP",Context.MODE_PRIVATE);
+
+        viewModel = new ViewModelProvider(this).get(IncidentListViewModel.class);
+        viewModel.getIncidentes().observe(getViewLifecycleOwner(), list -> {
+            if (binding == null) return;
+            if (list != null) {
+                datos.clear();
+                datos.addAll(list);
+                filtrar();
+            }
+        });
+        viewModel.getState().observe(getViewLifecycleOwner(), state -> {
+            if (binding == null) return;
+            if (state == IncidentListViewModel.State.AUTH_EXPIRED) {
+                com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
+            }
+        });
         String rol=prefs.getString("USER_ROLE","Solicitante");
         binding.txtRoleMini.setText(rol);
         binding.txtListTitle.setText("Administrador".equalsIgnoreCase(rol) ? "Todos los incidentes" :
@@ -158,33 +177,26 @@ public class IncidentListFragment extends Fragment {
     }
 
     private void cargar(){
-        if(binding==null)return;
+        if(binding==null || viewModel == null)return;
         binding.listMessage.setVisibility(View.VISIBLE);
         binding.listMessage.setText("Cargando incidentes...");
         String token=prefs.getString("TOKEN_JWT","");
-        JCPyAnyApi api=new Retrofit.Builder().baseUrl(getString(R.string.dominioWS))
-                .addConverterFactory(GsonConverterFactory.create()).build().create(JCPyAnyApi.class);
-        api.obtenerIncidentes("JWT "+token).enqueue(new Callback<RptaObtenerIncidentes>(){
-            @Override public void onResponse(@NonNull Call<RptaObtenerIncidentes> c,@NonNull Response<RptaObtenerIncidentes> r){
-                if(binding==null||!isAdded())return;
-                if(r.code()==401){
-                    com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
-                    return;
+        String userCacheId = prefs.getString("USER_NAME", "user_cache");
+
+        com.example.py_damb2026ii.repository.IncidentRepository.getInstance().sincronizarPendientes(
+                requireContext(),
+                token,
+                userCacheId,
+                (syncedCount, extraMsg) -> {
+                    if (isAdded() && binding != null) {
+                        String text = "Se enviaron " + syncedCount + " incidentes pendientes" + (extraMsg != null ? extraMsg : "");
+                        com.google.android.material.snackbar.Snackbar.make(binding.getRoot(), text, com.google.android.material.snackbar.Snackbar.LENGTH_LONG).show();
+                        viewModel.cargarIncidentes(token, userCacheId);
+                    }
                 }
-                RptaObtenerIncidentes body=r.body();
-                if(!r.isSuccessful()||body==null||body.getCode()!=1||body.getData()==null){
-                    binding.listMessage.setVisibility(View.VISIBLE);
-                    binding.listMessage.setText("No se pudo consultar los incidentes. HTTP "+r.code());
-                    return;
-                }
-                datos.clear();datos.addAll(body.getData());filtrar();
-            }
-            @Override public void onFailure(@NonNull Call<RptaObtenerIncidentes> c,@NonNull Throwable t){
-                if(binding==null||!isAdded())return;
-                binding.listMessage.setVisibility(View.VISIBLE);
-                binding.listMessage.setText("Sin conexión con el servidor. Revisa Internet y vuelve a abrir esta pantalla.");
-            }
-        });
+        );
+
+        viewModel.cargarIncidentes(token, userCacheId);
     }
     @Override public void onDestroyView(){super.onDestroyView();binding=null;}
 }

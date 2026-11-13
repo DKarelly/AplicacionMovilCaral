@@ -36,6 +36,20 @@ public class SesionHelper {
             FirebaseMessaging.getInstance().deleteToken();
         } catch (Exception ignored) {}
 
+        final String userCacheId = prefs.getString("USER_NAME", "");
+        final Context appContext = ctx.getApplicationContext();
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                if (!userCacheId.isEmpty()) {
+                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).incidenteDao().deleteByUsuario(userCacheId);
+                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).historialDao().deleteByUsuario(userCacheId);
+                } else {
+                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).incidenteDao().deleteAll();
+                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).historialDao().deleteAll();
+                }
+            } catch (Exception ignored) {}
+        });
+
         // 1. Borrar SharedPreferences "USAT_SP"
         prefs.edit().clear().apply();
 

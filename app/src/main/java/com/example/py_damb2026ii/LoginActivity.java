@@ -162,13 +162,29 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     // Guardar sesión JWT
-                    prefs.edit()
+                    SharedPreferences.Editor editor = prefs.edit()
                             .putString("TOKEN_JWT", r.getAccess_token())
                             .putString("USER_ROLE", r.getRol())
-                            .putString("USER_NAME", r.getNombreVisible(usuario))
-                            .apply();
+                            .putString("USER_NAME", r.getNombreVisible(usuario));
+
+                    if (r.getUser() != null) {
+                        editor.putInt("USER_ID_SUCURSAL", r.getUser().getIdSucursal());
+                        if (r.getUser().getSucursal() != null) {
+                            editor.putString("USER_SUCURSAL_NOMBRE", r.getUser().getSucursal());
+                        }
+                    }
+                    editor.apply();
 
                     final String jwtToken = r.getAccess_token();
+                    final String userCacheId = r.getNombreVisible(usuario);
+
+                    com.example.py_damb2026ii.repository.IncidentRepository.getInstance().sincronizarPendientes(
+                            LoginActivity.this,
+                            jwtToken,
+                            userCacheId,
+                            (syncedCount, extraMsg) -> {}
+                    );
+
                     FirebaseMessaging.getInstance().getToken()
                             .addOnSuccessListener(token -> {
                                 if (token != null && !token.isEmpty()) {

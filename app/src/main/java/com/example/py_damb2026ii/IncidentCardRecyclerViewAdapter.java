@@ -1,5 +1,6 @@
 package com.example.py_damb2026ii;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -9,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<IncidentCardViewHolder> {
-
 
     private final List<IncidentEntry> incidentList = new ArrayList<>();
 
@@ -41,7 +40,6 @@ public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<Incide
         notifyDataSetChanged();
     }
 
-
     @NonNull
     @Override
     public IncidentCardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -56,28 +54,57 @@ public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<Incide
 
         IncidentEntry incident = incidentList.get(position);
 
-        holder.incidentCode.setText(String.format(Locale.getDefault(), "INC-%03d", incident.id));
-        holder.incidentTitle.setText(valorSeguro(incident.titulo));
-        holder.incidentDate.setText(formatearFechaCliente(incident.fecha_registro));
-        holder.incidentTecnico.setText(valorSeguro(incident.tecnico, "Sin asignar"));
-        holder.incidentSolicitante.setText("Solicita: " + valorSeguro(incident.solicitante, "Sin solicitante"));
-        holder.incidentPriorityChip.setText(valorSeguro(incident.prioridad, "Media"));
-        holder.incidentStatusChip.setText(valorSeguro(incident.estado, "Abierto"));
+        if (incident.id < 0) {
+            holder.incidentCode.setText("OFFLINE");
+            holder.incidentTitle.setText(valorSeguro(incident.titulo));
+            holder.incidentDate.setText(formatearFechaCliente(incident.fecha_registro));
+            holder.incidentTecnico.setText("Toca para reintentar envío ahora");
+            holder.incidentSolicitante.setText("Pendiente de sincronizar");
+            holder.incidentPriorityChip.setText(valorSeguro(incident.prioridad, "Media"));
+            holder.incidentStatusChip.setText(valorSeguro(incident.estado, "Pendiente de sincronización"));
 
-        holder.incidentTitle.setTypeface(Typeface.DEFAULT_BOLD);
+            holder.incidentTitle.setTypeface(Typeface.DEFAULT_BOLD);
 
-        aplicarChipPrioridad(holder.incidentPriorityChip, incident.prioridad);
-        aplicarChipEstado(holder.incidentStatusChip, incident.estado);
+            aplicarChipPrioridad(holder.incidentPriorityChip, incident.prioridad);
+            aplicarChipEstado(holder.incidentStatusChip, incident.estado);
 
-        holder.itemView.setOnClickListener(v -> {
-            Bundle args = new Bundle();
-            args.putInt("id_incidente", incident.id);
+            holder.itemView.setOnClickListener(v -> {
+                Context ctx = v.getContext();
+                android.content.SharedPreferences prefs = ctx.getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
+                String token = prefs.getString("TOKEN_JWT", "");
+                String userCacheId = prefs.getString("USER_NAME", "");
+                com.google.android.material.snackbar.Snackbar.make(v, "Reintentando envío de incidentes pendientes...", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
+                com.example.py_damb2026ii.repository.IncidentRepository.getInstance().sincronizarPendientes(
+                        ctx, token, userCacheId, (syncedCount, extraMsg) -> {
+                            String msg = "Se enviaron " + syncedCount + " incidentes pendientes" + (extraMsg != null ? extraMsg : "");
+                            com.google.android.material.snackbar.Snackbar.make(v, msg, com.google.android.material.snackbar.Snackbar.LENGTH_LONG).show();
+                        }
+                );
+            });
+        } else {
+            holder.incidentCode.setText(String.format(Locale.getDefault(), "INC-%03d", incident.id));
+            holder.incidentTitle.setText(valorSeguro(incident.titulo));
+            holder.incidentDate.setText(formatearFechaCliente(incident.fecha_registro));
+            holder.incidentTecnico.setText(valorSeguro(incident.tecnico, "Sin asignar"));
+            holder.incidentSolicitante.setText("Solicita: " + valorSeguro(incident.solicitante, "Sin solicitante"));
+            holder.incidentPriorityChip.setText(valorSeguro(incident.prioridad, "Media"));
+            holder.incidentStatusChip.setText(valorSeguro(incident.estado, "Abierto"));
 
-            Navigation.findNavController(v).navigate(
-                    R.id.IncidentDetailFragment,
-                    args
-            );
-        });
+            holder.incidentTitle.setTypeface(Typeface.DEFAULT_BOLD);
+
+            aplicarChipPrioridad(holder.incidentPriorityChip, incident.prioridad);
+            aplicarChipEstado(holder.incidentStatusChip, incident.estado);
+
+            holder.itemView.setOnClickListener(v -> {
+                Bundle args = new Bundle();
+                args.putInt("id_incidente", incident.id);
+
+                Navigation.findNavController(v).navigate(
+                        R.id.IncidentDetailFragment,
+                        args
+                );
+            });
+        }
     }
 
     @Override
@@ -116,7 +143,10 @@ public class IncidentCardRecyclerViewAdapter extends RecyclerView.Adapter<Incide
         int bg = Color.parseColor("#EAF4FB");
         int fg = Color.parseColor("#4D88B3");
 
-        if ("Resuelto".equalsIgnoreCase(estado) || "Cerrado".equalsIgnoreCase(estado)) {
+        if (estado != null && (estado.contains("Pendiente") || estado.contains("Error"))) {
+            bg = Color.parseColor("#FDE8E8");
+            fg = Color.parseColor("#C53929");
+        } else if ("Resuelto".equalsIgnoreCase(estado) || "Cerrado".equalsIgnoreCase(estado)) {
             bg = Color.parseColor("#E7F3EA");
             fg = Color.parseColor("#5C9B78");
         } else if ("En proceso".equalsIgnoreCase(estado)) {

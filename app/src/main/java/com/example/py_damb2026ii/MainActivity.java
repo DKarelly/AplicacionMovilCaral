@@ -73,6 +73,27 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
 
+        com.example.py_damb2026ii.util.NetworkMonitor networkMonitor = new com.example.py_damb2026ii.util.NetworkMonitor(this);
+        networkMonitor.observe(this, isConnected -> {
+            if (binding != null && binding.bannerOffline != null) {
+                binding.bannerOffline.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+            }
+            if (Boolean.TRUE.equals(isConnected)) {
+                String token = prefs.getString("TOKEN_JWT", "");
+                String userCacheId = prefs.getString("USER_NAME", "");
+                if (!token.isEmpty() && !userCacheId.isEmpty()) {
+                    com.example.py_damb2026ii.repository.IncidentRepository.getInstance().sincronizarPendientes(
+                            this, token, userCacheId, (syncedCount, extraMsg) -> runOnUiThread(() -> {
+                                if (binding != null) {
+                                    String text = "Se enviaron " + syncedCount + " incidentes pendientes" + (extraMsg != null ? extraMsg : "");
+                                    Snackbar.make(binding.getRoot(), text, Snackbar.LENGTH_LONG).show();
+                                }
+                            })
+                    );
+                }
+            }
+        });
+
         if (prefs.getString("TOKEN_JWT", "").isEmpty()) {
             salir();
             return;

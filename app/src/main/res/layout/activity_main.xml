@@ -14,6 +14,19 @@
         android:background="@color/productGridBackgroundColor"
         app:titleTextColor="@color/textPrimary"
         app:navigationIconTint="@color/textPrimary" />
+
+    <TextView
+        android:id="@+id/banner_offline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#D9534F"
+        android:textColor="@android:color/white"
+        android:text="Sin conexión — modo offline"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingVertical="8dp"
+        android:visibility="gone" />
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
