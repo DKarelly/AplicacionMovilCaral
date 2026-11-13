@@ -6,4 +6,12 @@
     </style>
 
     <style name="Theme.PY_DAMB2026II" parent="Base.Theme.PY_DAMB2026II" />
+
+    <style name="Theme.PY_DAMB2026II.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/colorPrimaryDark</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">#284D65</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">@android:color/transparent</item>
+        <item name="android:statusBarColor">#72A8C7</item>
+        <item name="android:navigationBarColor">#284D65</item>
+    </style>
 </resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/splash_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splash_background_gradient">
+
+    <FrameLayout
+        android:id="@+id/tickets_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.example.py_damb2026ii.util.WaveView
+        android:id="@+id/wave_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/center_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:elevation="10dp"
+        android:padding="24dp">
+
+        <ImageView
+            android:id="@+id/img_logo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_incident_logo"
+            android:contentDescription="Logo IncidentApp"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/txt_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IncidentApp"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/txt_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gestión de incidentes TI"
+            android:textColor="#E0FFFFFF"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp"
+            android:visibility="invisible" />
+
+    </LinearLayout>
+
+</FrameLayout>

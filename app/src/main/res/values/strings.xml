@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PY_DAMB2026II</string>
+    <string name="app_name">IncidentApp</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
