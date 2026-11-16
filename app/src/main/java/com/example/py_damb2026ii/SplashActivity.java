@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -32,7 +33,12 @@ public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        try {
+            Class<?> clazz = Class.forName("androidx.core.splashscreen.SplashScreen");
+            clazz.getMethod("installSplashScreen", android.app.Activity.class).invoke(null, this);
+        } catch (Exception ignored) {}
         super.onCreate(savedInstanceState);
+
         binding = ActivitySplashBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -40,57 +46,74 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void iniciarAnimacion() {
+        if (binding == null) return;
+
         binding.waveView.startWaveAnimation(2200);
 
-        crearTicketsCayendo(10);
+        // 35 elementos cayendo (alternando espiga_arroz y logo_molino)
+        crearEspigasCayendo(35);
 
-        handler.postDelayed(this::revelarLogoYTextos, 2100);
+        handler.postDelayed(this::revelarLogoYTextos, 2000);
 
         finishRunnable = this::navegarADestino;
         handler.postDelayed(finishRunnable, 3500);
     }
 
-    private void crearTicketsCayendo(int cantidad) {
+    private void crearEspigasCayendo(int cantidad) {
+        if (binding == null) return;
+
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         int screenWidth = metrics.widthPixels;
         int screenHeight = metrics.heightPixels;
         Random random = new Random();
 
         for (int i = 0; i < cantidad; i++) {
-            ImageView ticket = new ImageView(this);
-            ticket.setImageResource(R.drawable.ic_incident_logo);
+            ImageView espiga = new ImageView(this);
+            if (i % 2 == 0) {
+                espiga.setImageResource(R.drawable.espiga_arroz);
+            } else {
+                espiga.setImageResource(R.drawable.logo_molino);
+            }
+            espiga.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
-            int sizeDp = 32 + random.nextInt(20);
-            int sizePx = (int) (sizeDp * metrics.density);
+            // Tamaño variado (0.5x a 1.3x) de una base de 60dp
+            float scale = 0.5f + random.nextFloat() * 0.8f;
+            int baseSizePx = (int) (60 * metrics.density);
+            int sizePx = Math.max(24, (int) (baseSizePx * scale));
 
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(sizePx, sizePx);
-            int marginX = random.nextInt(Math.max(1, screenWidth - sizePx - 40)) + 20;
+            int marginX = random.nextInt(Math.max(1, screenWidth - sizePx - 20)) + 10;
             lp.leftMargin = marginX;
-            ticket.setLayoutParams(lp);
+            espiga.setLayoutParams(lp);
 
-            ticket.setTranslationY(-sizePx - 50);
-            float startRotation = -30f + random.nextFloat() * 60f;
-            ticket.setRotation(startRotation);
+            espiga.setTranslationY(-sizePx - 40);
 
-            binding.ticketsContainer.addView(ticket);
+            float startRotation = -40f + random.nextFloat() * 80f;
+            espiga.setRotation(startRotation);
+
+            float startAlpha = 0.4f + random.nextFloat() * 0.6f;
+            espiga.setAlpha(startAlpha);
+
+            binding.ticketsContainer.addView(espiga);
 
             long delay = random.nextInt(700);
-            long duration = 1200 + random.nextInt(500);
+            long duration = 1300 + random.nextInt(600);
 
-            float targetY = screenHeight * (0.35f + random.nextFloat() * 0.25f);
+            float targetY = screenHeight * (0.45f + random.nextFloat() * 0.10f);
 
-            ObjectAnimator fallAnim = ObjectAnimator.ofFloat(ticket, View.TRANSLATION_Y, -sizePx - 50, targetY);
+            ObjectAnimator fallAnim = ObjectAnimator.ofFloat(espiga, View.TRANSLATION_Y, -sizePx - 40, targetY);
             fallAnim.setDuration(duration);
             fallAnim.setStartDelay(delay);
-            fallAnim.setInterpolator(new OvershootInterpolator(0.8f));
+            fallAnim.setInterpolator(new DecelerateInterpolator());
 
-            ObjectAnimator rotateAnim = ObjectAnimator.ofFloat(ticket, View.ROTATION, startRotation, startRotation + (-20f + random.nextFloat() * 40f));
+            float endRotation = startRotation + (-25f + random.nextFloat() * 50f);
+            ObjectAnimator rotateAnim = ObjectAnimator.ofFloat(espiga, View.ROTATION, startRotation, endRotation);
             rotateAnim.setDuration(duration);
             rotateAnim.setStartDelay(delay);
 
-            ObjectAnimator fadeAnim = ObjectAnimator.ofFloat(ticket, View.ALPHA, 1.0f, 0.0f);
-            fadeAnim.setDuration(400);
-            fadeAnim.setStartDelay(delay + duration - 300);
+            ObjectAnimator fadeAnim = ObjectAnimator.ofFloat(espiga, View.ALPHA, startAlpha, 0.0f);
+            fadeAnim.setDuration(450);
+            fadeAnim.setStartDelay(delay + duration - 450);
 
             AnimatorSet set = new AnimatorSet();
             set.playTogether(fallAnim, rotateAnim, fadeAnim);
@@ -106,32 +129,38 @@ public class SplashActivity extends AppCompatActivity {
         binding.txtTitle.setVisibility(View.VISIBLE);
         binding.txtSubtitle.setVisibility(View.VISIBLE);
 
-        ObjectAnimator logoScaleX = ObjectAnimator.ofFloat(binding.imgLogo, View.SCALE_X, 0.6f, 1.0f);
-        ObjectAnimator logoScaleY = ObjectAnimator.ofFloat(binding.imgLogo, View.SCALE_Y, 0.6f, 1.0f);
+        binding.imgLogo.setScaleX(0.4f);
+        binding.imgLogo.setScaleY(0.4f);
+        binding.imgLogo.setAlpha(0.0f);
+
+        ObjectAnimator logoScaleX = ObjectAnimator.ofFloat(binding.imgLogo, View.SCALE_X, 0.4f, 1.0f);
+        ObjectAnimator logoScaleY = ObjectAnimator.ofFloat(binding.imgLogo, View.SCALE_Y, 0.4f, 1.0f);
         ObjectAnimator logoAlpha = ObjectAnimator.ofFloat(binding.imgLogo, View.ALPHA, 0.0f, 1.0f);
 
         AnimatorSet logoSet = new AnimatorSet();
         logoSet.playTogether(logoScaleX, logoScaleY, logoAlpha);
         logoSet.setDuration(700);
-        logoSet.setInterpolator(new OvershootInterpolator(1.2f));
+        logoSet.setInterpolator(new OvershootInterpolator(1.3f));
 
-        binding.txtTitle.setTranslationY(40f);
-        ObjectAnimator titleTransY = ObjectAnimator.ofFloat(binding.txtTitle, View.TRANSLATION_Y, 40f, 0f);
+        binding.txtTitle.setTranslationY(35f);
+        binding.txtTitle.setAlpha(0.0f);
+        ObjectAnimator titleTransY = ObjectAnimator.ofFloat(binding.txtTitle, View.TRANSLATION_Y, 35f, 0f);
         ObjectAnimator titleAlpha = ObjectAnimator.ofFloat(binding.txtTitle, View.ALPHA, 0.0f, 1.0f);
 
         AnimatorSet titleSet = new AnimatorSet();
         titleSet.playTogether(titleTransY, titleAlpha);
-        titleSet.setDuration(600);
-        titleSet.setStartDelay(200);
+        titleSet.setDuration(550);
+        titleSet.setStartDelay(180);
 
-        binding.txtSubtitle.setTranslationY(30f);
-        ObjectAnimator subTransY = ObjectAnimator.ofFloat(binding.txtSubtitle, View.TRANSLATION_Y, 30f, 0f);
+        binding.txtSubtitle.setTranslationY(25f);
+        binding.txtSubtitle.setAlpha(0.0f);
+        ObjectAnimator subTransY = ObjectAnimator.ofFloat(binding.txtSubtitle, View.TRANSLATION_Y, 25f, 0f);
         ObjectAnimator subAlpha = ObjectAnimator.ofFloat(binding.txtSubtitle, View.ALPHA, 0.0f, 1.0f);
 
         AnimatorSet subSet = new AnimatorSet();
         subSet.playTogether(subTransY, subAlpha);
-        subSet.setDuration(600);
-        subSet.setStartDelay(350);
+        subSet.setDuration(550);
+        subSet.setStartDelay(320);
 
         AnimatorSet masterSet = new AnimatorSet();
         masterSet.playTogether(logoSet, titleSet, subSet);

@@ -27,20 +27,21 @@
 
         <ImageView
             android:id="@+id/img_logo"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@drawable/ic_incident_logo"
-            android:contentDescription="Logo IncidentApp"
+            android:layout_width="128dp"
+            android:layout_height="128dp"
+            android:src="@drawable/logo_molino"
+            android:contentDescription="Logo Molino Caral"
             android:visibility="invisible" />
 
         <TextView
             android:id="@+id/txt_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="IncidentApp"
-            android:textColor="@android:color/white"
-            android:textSize="30sp"
+            android:text="IncidentCaral"
+            android:textColor="#FFFDF7"
+            android:textSize="32sp"
             android:textStyle="bold"
+            android:fontFamily="sans-serif"
             android:layout_marginTop="16dp"
             android:visibility="invisible" />
 
@@ -48,9 +49,11 @@
             android:id="@+id/txt_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gestión de incidentes TI"
-            android:textColor="#E0FFFFFF"
-            android:textSize="14sp"
+            android:text="Molino Caral"
+            android:textColor="#F4B82E"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"
             android:layout_marginTop="6dp"
             android:visibility="invisible" />
 
