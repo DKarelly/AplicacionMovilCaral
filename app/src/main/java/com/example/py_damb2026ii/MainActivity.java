@@ -386,12 +386,49 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    @Override public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu); return true;
+    @Override 
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu); 
+        return true;
     }
-    @Override public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) { confirmarSalir(); return true; }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem toggleItem = menu.findItem(R.id.action_toggle_theme);
+        if (toggleItem != null && prefs != null) {
+            boolean isDarkMode = prefs.getBoolean("DARK_MODE_ENABLED", false);
+            toggleItem.setIcon(isDarkMode ? R.drawable.ic_light_mode : R.drawable.ic_dark_mode);
+            toggleItem.setTitle(isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro");
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override 
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_logout) { 
+            confirmarSalir(); 
+            return true; 
+        } else if (item.getItemId() == R.id.action_toggle_theme) {
+            alternarModoOscuro();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void alternarModoOscuro() {
+        boolean isDarkMode = prefs.getBoolean("DARK_MODE_ENABLED", false);
+        boolean newDarkMode = !isDarkMode;
+
+        prefs.edit().putBoolean("DARK_MODE_ENABLED", newDarkMode).apply();
+
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                newDarkMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        );
+
+        String msg = newDarkMode ? "Modo Oscuro activado" : "Modo Claro activado";
+        if (binding != null) {
+            Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
+        }
     }
     @Override public boolean onSupportNavigateUp() {
         return navController != null && NavigationUI.navigateUp(navController, appBarConfiguration)

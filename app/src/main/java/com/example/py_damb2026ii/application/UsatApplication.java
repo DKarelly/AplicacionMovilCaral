@@ -29,6 +29,13 @@ public class UsatApplication extends Application {
         this.setAppContext(getApplicationContext());
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
+        // Inicializar preferencia de modo oscuro / claro
+        android.content.SharedPreferences prefs = getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
+        boolean isDarkMode = prefs.getBoolean("DARK_MODE_ENABLED", false);
+        AppCompatDelegate.setDefaultNightMode(
+                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+        );
+
         crearCanalNotificaciones();
     }
 

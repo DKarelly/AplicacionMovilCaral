@@ -1,15 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color><color name="white">#FFFFFFFF</color>
-    <color name="colorPrimary">#4E7D9A</color><color name="colorPrimaryDark">#284D65</color><color name="colorAccent">#72A8C7</color>
-    <color name="screenBackground">#F7FBFD</color><color name="screenBackground2">#E5F0F6</color>
-    <color name="buttonBackground">#4E7D9A</color><color name="toolbarIconColor">#243743</color>
-    <color name="productGridBackgroundColor">#F7FBFD</color>
-    <color name="textPrimary">#193247</color><color name="textSecondary">#738C9D</color>
-    <color name="softBlue">#E7F2F8</color><color name="softBlue2">#DCEAF2</color>
-    <color name="softCard">#FFFFFF</color><color name="softBorder">#DEE8EE</color>
-    <color name="softDanger">#F9E2DF</color><color name="textDanger">#CB746B</color>
-    <color name="softWarning">#FFF0D9</color><color name="textWarning">#C18224</color>
-    <color name="softSuccess">#DFEEE7</color><color name="textSuccess">#4A8B70</color>
-    <color name="softInfo">#E7F2F8</color><color name="textInfo">#4E7D9A</color>
+    <!-- Paleta de colores oficial Molino Caral -->
+    <color name="caral_green">#197348</color>
+    <color name="caral_dark_green_1">#145A38</color>
+    <color name="caral_dark_green_2">#0F472D</color>
+    <color name="caral_gold">#F4B82E</color>
+    <color name="caral_cream">#FFFDF7</color>
+    <color name="caral_soft_green">#EAF3EC</color>
+    <color name="caral_soft_green_border">#C9DED0</color>
+    <color name="caral_text_primary">#26342C</color>
+    <color name="caral_text_secondary">#496052</color>
+    <color name="caral_orange">#E85D04</color>
+    <color name="caral_dark_background">#18251D</color>
+    <color name="caral_dark_card">#22352A</color>
+
+    <!-- Compatibilidad con vistas existentes -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="colorPrimary">#197348</color>
+    <color name="colorPrimaryDark">#0F472D</color>
+    <color name="colorAccent">#F4B82E</color>
+    <color name="screenBackground">#FFFDF7</color>
+    <color name="screenBackground2">#EAF3EC</color>
+    <color name="buttonBackground">#197348</color>
+    <color name="toolbarIconColor">#26342C</color>
+    <color name="productGridBackgroundColor">#FFFDF7</color>
+    <color name="textPrimary">#26342C</color>
+    <color name="textSecondary">#496052</color>
+    <color name="softBlue">#EAF3EC</color>
+    <color name="softBlue2">#C9DED0</color>
+    <color name="softCard">#FFFDF7</color>
+    <color name="softBorder">#C9DED0</color>
+    <color name="softDanger">#F9E2DF</color>
+    <color name="textDanger">#CB746B</color>
+    <color name="softWarning">#FFF0D9</color>
+    <color name="textWarning">#E85D04</color>
+    <color name="softSuccess">#EAF3EC</color>
+    <color name="textSuccess">#197348</color>
+    <color name="softInfo">#EAF3EC</color>
+    <color name="textInfo">#197348</color>
 </resources>

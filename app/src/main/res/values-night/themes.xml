@@ -1,7 +1,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Tema Base de la Aplicación (Modo Oscuro) -->
     <style name="Base.Theme.PY_DAMB2026II" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/caral_green</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">@color/caral_dark_green_1</item>
+        <item name="colorOnPrimaryContainer">#EAF3EC</item>
+        <item name="colorSecondary">@color/caral_gold</item>
+        <item name="colorOnSecondary">#18251D</item>
+        <item name="colorTertiary">@color/caral_orange</item>
+        <item name="android:colorBackground">@color/caral_dark_background</item>
+        <item name="colorSurface">@color/caral_dark_card</item>
+        <item name="colorOnSurface">#EAF3EC</item>
+        <item name="colorOnSurfaceVariant">#C9DED0</item>
+        <item name="android:statusBarColor">@color/caral_dark_background</item>
+        <item name="android:navigationBarColor">@color/caral_dark_background</item>
     </style>
 </resources>
