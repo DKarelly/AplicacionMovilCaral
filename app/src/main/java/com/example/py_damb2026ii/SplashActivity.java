@@ -50,8 +50,8 @@ public class SplashActivity extends AppCompatActivity {
 
         binding.waveView.startWaveAnimation(2200);
 
-        // 35 elementos cayendo (alternando espiga_arroz y logo_molino)
-        crearEspigasCayendo(35);
+        // 50 elementos cayendo (exactamente 25 espiga_arroz y 25 logo_molino)
+        crearEspigasCayendo(50);
 
         handler.postDelayed(this::revelarLogoYTextos, 2000);
 
