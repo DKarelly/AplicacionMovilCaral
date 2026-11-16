@@ -13,22 +13,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.example.py_damb2026ii.Interface.JCPyAnyApi;
 import com.example.py_damb2026ii.databinding.ActivityLoginBinding;
-import com.example.py_damb2026ii.model.RequAuth;
-import com.example.py_damb2026ii.model.RptaAuth;
-import com.example.py_damb2026ii.model.RptaInsertarIncidente;
+import com.example.py_damb2026ii.repository.SupabaseAuthRepository;
+import com.example.py_damb2026ii.repository.AuthCallback;
+import com.example.py_damb2026ii.repository.MobileUser;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.messaging.FirebaseMessaging;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import android.graphics.Color;
 
 public class LoginActivity extends AppCompatActivity {
@@ -101,123 +91,48 @@ public class LoginActivity extends AppCompatActivity {
             binding.nextButton.setText("Ingresando...");
             binding.txtRptaJson.setText("");
 
-            RequAuth req = new RequAuth();
-            req.setUsername(usuario);
-            req.setPassword(clave);
-
-            JCPyAnyApi api = new Retrofit.Builder()
-                    .baseUrl(getString(R.string.dominioWS))
-                    .addConverterFactory(
-                            GsonConverterFactory.create())
-                    .build()
-                    .create(JCPyAnyApi.class);
-
-            api.auth(req).enqueue(new Callback<RptaAuth>() {
-
-
+            SupabaseAuthRepository.INSTANCE.login(usuario, clave, new AuthCallback() {
                 @Override
-                public void onResponse(
-                        @NonNull Call<RptaAuth> call,
-                        @NonNull Response<RptaAuth> response) {
+                public void onSuccess(
+                        @NonNull MobileUser user,
+                        @NonNull java.util.List<com.example.py_damb2026ii.repository.MobileMembership> memberships,
+                        @NonNull String accessToken,
+                        @NonNull String refreshToken) {
 
-                    binding.nextButton.setEnabled(true);
-                    binding.nextButton.setText("Ingresar");
-
-                    // Credenciales incorrectas
-                    if (response.code() == 401) {
-                        mostrarError(
-                                "Correo o contraseña incorrectos. Inténtalo nuevamente."
-                        );
-                        return;
-                    }
-
-                    // Otros errores del servidor
-                    if (!response.isSuccessful()) {
-                        if (response.code() == 403) {
-                            mostrarError(
-                                    "Tu cuenta no tiene permiso para ingresar."
-                            );
-                        } else if (response.code() >= 500) {
-                            mostrarError(
-                                    "El servidor no está disponible. Inténtalo más tarde."
-                            );
-                        } else {
-                            mostrarError(
-                                    "No se pudo iniciar sesión. Verifica tus datos."
-                            );
-                        }
-                        return;
-                    }
-
-                    RptaAuth r = response.body();
-
-                    if (r == null
-                            || r.getAccess_token() == null
-                            || r.getAccess_token().isEmpty()) {
-
-                        mostrarError(
-                                "No se pudo validar tu sesión. Inténtalo nuevamente."
-                        );
-                        return;
-                    }
-
-                    // Guardar sesión JWT
+                    // Guardar sesión
                     SharedPreferences.Editor editor = prefs.edit()
-                            .putString("TOKEN_JWT", r.getAccess_token())
-                            .putString("USER_ROLE", r.getRol())
-                            .putString("USER_NAME", r.getNombreVisible(usuario));
+                            .putString("TOKEN_JWT", accessToken)
+                            .putString("REFRESH_TOKEN", refreshToken)
+                            .putString("USER_ROLE", user.getRol())
+                            .putString("USER_NAME", user.getNombre())
+                            .putString("USER_ID", user.getId())
+                            .putString("USER_EMPRESA_ID",
+                                    user.getEmpresa_id() != null ? user.getEmpresa_id() : "");
 
-                    if (r.getUser() != null) {
-                        editor.putInt("USER_ID_SUCURSAL", r.getUser().getIdSucursal());
-                        if (r.getUser().getSucursal() != null) {
-                            editor.putString("USER_SUCURSAL_NOMBRE", r.getUser().getSucursal());
-                        }
+                    if (user.getSucursal_id() != null) {
+                        editor.putString("USER_SUCURSAL_ID", user.getSucursal_id());
                     }
                     editor.apply();
-
-                    final String jwtToken = r.getAccess_token();
-                    final String userCacheId = r.getNombreVisible(usuario);
-
-                    com.example.py_damb2026ii.repository.IncidentRepository.getInstance().sincronizarPendientes(
-                            LoginActivity.this,
-                            jwtToken,
-                            userCacheId,
-                            (syncedCount, extraMsg) -> {}
-                    );
 
                     FirebaseMessaging.getInstance().getToken()
                             .addOnSuccessListener(token -> {
                                 if (token != null && !token.isEmpty()) {
                                     prefs.edit().putString("FCM_TOKEN", token).apply();
-                                    registrarFcmTokenServidor(jwtToken, token);
                                 }
                             });
 
-                    Intent intent = new Intent(
-                            LoginActivity.this,
-                            MainActivity.class
-                    );
-
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
                 }
 
-
-
                 @Override
-                public void onFailure(
-                        @NonNull Call<RptaAuth> call,
-                        @NonNull Throwable t) {
-
+                public void onError(@NonNull String message) {
                     binding.nextButton.setEnabled(true);
                     binding.nextButton.setText("Ingresar");
-
-                    mostrarError(
-                            "No se pudo conectar. Comprueba tu conexión a Internet."
-                    );
+                    mostrarError(message);
                 }
-
-            });
+            }, androidx.lifecycle.LifecycleOwnerKt.getLifecycleScope(LoginActivity.this));
         });
     }
 
@@ -250,23 +165,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    private void registrarFcmTokenServidor(String jwtToken, String fcmToken) {
-        JCPyAnyApi api = new Retrofit.Builder()
-                .baseUrl(getString(R.string.dominioWS))
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(JCPyAnyApi.class);
 
-        Map<String, String> body = new HashMap<>();
-        body.put("fcm_token", fcmToken);
-
-        api.registrarFcmToken("JWT " + jwtToken, body).enqueue(new Callback<RptaInsertarIncidente>() {
-            @Override
-            public void onResponse(@NonNull Call<RptaInsertarIncidente> call, @NonNull Response<RptaInsertarIncidente> response) {}
-            @Override
-            public void onFailure(@NonNull Call<RptaInsertarIncidente> call, @NonNull Throwable t) {}
-        });
-    }
 
     private void mostrarError(String mensaje) {
 
@@ -278,11 +177,12 @@ public class LoginActivity extends AppCompatActivity {
                 Snackbar.LENGTH_LONG
         );
 
-        snackbar.setBackgroundTint(
-                Color.parseColor("#243743")
-        );
+        View snackbarView = snackbar.getView();
+        snackbarView.setBackgroundColor(Color.parseColor("#243743"));
 
-        snackbar.setTextColor(Color.WHITE);
+        android.widget.TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+        textView.setTextColor(Color.WHITE);
+        
         snackbar.show();
     }
 

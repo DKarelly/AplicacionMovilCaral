@@ -1,5 +1,11 @@
+
 [versions]
-agp = "9.3.2"
+agp = "9.3.3"
+
+# AGP 9 trae Kotlin integrado.
+# Esta versión se utiliza para Kotlin Serialization.
+kotlin = "2.3.0"
+
 gson = "2.14.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -8,40 +14,103 @@ appcompat = "1.7.1"
 material = "1.14.0"
 constraintlayout = "2.2.2"
 activityKtx = "1.13.0"
-navigationFragment = "2.9.8"
-navigationUi = "2.9.8"
-retrofit = "3.1.0-SNAPSHOT"
-retrofitVersion = "2.11.0"
+
+# Navigation
+navigation = "2.9.8"
+
+# Retrofit
+retrofit = "2.11.0"
+
 volley = "1.2.1"
+
+# Google Services
 googleGmsGoogleServices = "4.5.0"
-firebaseDatabase = "23.0.0"
-firebaseBom = "33.8.0"
+
+# Firebase
+firebaseBom = "35.2.0"
+
+# Room
 room = "2.6.1"
 
+# Core Splashscreen
+coreSplashscreen = "1.0.1"
+
+# Supabase
+supabase = "3.1.4"
+
+# Ktor
+ktor = "3.1.3"
+
+# Coroutines
+coroutines = "1.10.2"
+
+
 [libraries]
-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofitVersion" }
+
+# Gson
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+
+# Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+
+# AndroidX / UI
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
-navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
-navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationFragment" }
-navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
+
+# Navigation Component
+navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
+navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigation" }
+
+# Retrofit
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-retrofit-v2110 = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+
+# Volley
 volley = { module = "com.android.volley:volley", version.ref = "volley" }
+
+# Google Maps
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version = "20.0.0" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+
+# Firebase (versiones gestionadas por el BoM)
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-database = { module = "com.google.firebase:firebase-database" }
+
+# Room
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
+# Core Splashscreen
+core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+
+# Supabase
+supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
+supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt" }
+supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt" }
+supabase-functions = { group = "io.github.jan-tennert.supabase", name = "functions-kt" }
+
+# Ktor
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
+
+# Kotlin Coroutines
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+
 [plugins]
+
+# Android
 android-application = { id = "com.android.application", version.ref = "agp" }
+
+# Kotlin Serialization
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+# Google Services
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 
+# Navigation Safe Args
+androidx-navigation-safeargs = { id = "androidx.navigation.safeargs", version.ref = "navigation" }

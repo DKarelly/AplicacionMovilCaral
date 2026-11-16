@@ -46,7 +46,7 @@ public class SplashActivity extends AppCompatActivity {
 
         handler.postDelayed(this::revelarLogoYTextos, 2100);
 
-        finishRunnable = this::navegarAFragmentODestino;
+        finishRunnable = this::navegarADestino;
         handler.postDelayed(finishRunnable, 3500);
     }
 
@@ -139,25 +139,39 @@ public class SplashActivity extends AppCompatActivity {
         masterSet.start();
     }
 
-    private void navegarAFragmentODestino() {
+    private void navegarADestino() {
         if (isFinishing() || isDestroyed()) return;
 
         SharedPreferences prefs = getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
         String token = prefs.getString("TOKEN_JWT", "");
 
-        Intent intent;
         if (token != null && !token.trim().isEmpty()) {
-            intent = new Intent(SplashActivity.this, MainActivity.class);
+            com.example.py_damb2026ii.repository.SupabaseAuthRepository.INSTANCE.restoreSession(
+                    this,
+                    androidx.lifecycle.LifecycleOwnerKt.getLifecycleScope(this),
+                    restored -> {
+                        if (isFinishing() || isDestroyed()) return;
+                        Intent intent;
+                        if (restored) {
+                            intent = new Intent(SplashActivity.this, MainActivity.class);
+                        } else {
+                            intent = new Intent(SplashActivity.this, LoginActivity.class);
+                        }
+                        if (getIntent() != null && getIntent().getExtras() != null) {
+                            intent.putExtras(getIntent().getExtras());
+                        }
+                        startActivity(intent);
+                        finish();
+                    }
+            );
         } else {
-            intent = new Intent(SplashActivity.this, LoginActivity.class);
+            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+            if (getIntent() != null && getIntent().getExtras() != null) {
+                intent.putExtras(getIntent().getExtras());
+            }
+            startActivity(intent);
+            finish();
         }
-
-        if (getIntent() != null && getIntent().getExtras() != null) {
-            intent.putExtras(getIntent().getExtras());
-        }
-
-        startActivity(intent);
-        finish();
     }
 
     @Override
