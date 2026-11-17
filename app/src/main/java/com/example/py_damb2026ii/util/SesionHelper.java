@@ -24,48 +24,8 @@ public class SesionHelper {
 
     public static void cerrarSesionPorVencimiento(Context ctx) {
         if (ctx == null) return;
-
-        SharedPreferences prefs = ctx.getSharedPreferences("USAT_SP", Context.MODE_PRIVATE);
-        String jwt = prefs.getString("TOKEN_JWT", "");
-
-        if (!jwt.isEmpty()) {
-            eliminarFcmTokenServidor(ctx, jwt);
-        }
-
-        try {
-            FirebaseMessaging.getInstance().deleteToken();
-        } catch (Exception ignored) {}
-
-        final String userCacheId = prefs.getString("USER_NAME", "");
-        final Context appContext = ctx.getApplicationContext();
-        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                if (!userCacheId.isEmpty()) {
-                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).incidenteDao().deleteByUsuario(userCacheId);
-                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).historialDao().deleteByUsuario(userCacheId);
-                } else {
-                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).incidenteDao().deleteAll();
-                    com.example.py_damb2026ii.local.AppDatabase.getInstance(appContext).historialDao().deleteAll();
-                }
-            } catch (Exception ignored) {}
-        });
-
-        // 1. Borrar SharedPreferences "USAT_SP"
-        prefs.edit().clear().apply();
-
-        // 2. Detener UbicacionTecnicoService si está en ejecución
-        try {
-            Intent serviceIntent = new Intent(ctx, UbicacionTecnicoService.class);
-            ctx.stopService(serviceIntent);
-        } catch (Exception ignored) {}
-
-        // 3. Mostrar Toast
-        Toast.makeText(ctx, "Tu sesión expiró. Inicia sesión nuevamente.", Toast.LENGTH_LONG).show();
-
-        // 4. Abrir LoginActivity limpiando el stack de actividades
-        Intent intent = new Intent(ctx, LoginActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        ctx.startActivity(intent);
+        // La sesión es gestionada por Supabase Auth.
+        // Se omiten los cierres de sesión automáticos generados por el backend antiguo (PythonAnywhere).
     }
 
     public static void eliminarFcmTokenServidor(Context ctx, String jwtToken) {

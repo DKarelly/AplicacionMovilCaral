@@ -63,7 +63,7 @@ public class IncidentListViewModel extends AndroidViewModel {
                     @Override
                     public void onHttpError(int code) {
                         if (code == 401) {
-                            state.postValue(State.AUTH_EXPIRED);
+                            state.postValue(State.MODO_CACHE);
                         } else {
                             state.postValue(State.ERROR);
                             mensajeError.postValue("HTTP " + code);
