@@ -99,6 +99,11 @@ public class LoginActivity extends AppCompatActivity {
                         @NonNull String accessToken,
                         @NonNull String refreshToken) {
 
+                    String areasStr = "";
+                    if (user.getAreasAutorizadasList() != null && !user.getAreasAutorizadasList().isEmpty()) {
+                        areasStr = android.text.TextUtils.join(",", user.getAreasAutorizadasList());
+                    }
+
                     // Guardar sesión
                     SharedPreferences.Editor editor = prefs.edit()
                             .putString("TOKEN_JWT", accessToken)
@@ -108,7 +113,8 @@ public class LoginActivity extends AppCompatActivity {
                             .putString("USER_ID", user.getId())
                             .putString("USER_EMPRESA_ID",
                                     user.getEmpresa_id() != null ? user.getEmpresa_id() : "")
-                            .putBoolean("PUEDE_GESTIONAR_INCIDENTES", user.isPuedeGestionarIncidentes());
+                            .putBoolean("PUEDE_GESTIONAR_INCIDENTES", user.isPuedeGestionarIncidentes())
+                            .putString("AREAS_AUTORIZADAS", areasStr);
 
                     if (user.getSucursal_id() != null) {
                         editor.putString("USER_SUCURSAL_ID", user.getSucursal_id());
