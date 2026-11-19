@@ -433,57 +433,34 @@ public class AddIncidentFragment extends Fragment {
         binding.addIncidentButton.setEnabled(false);
         binding.addIncidentButton.setText("Enviando...");
 
-        String idUsuario = sharedPref.getString("USER_NAME", "user_cache");
-
-        com.example.py_damb2026ii.repository.IncidentRepository.getInstance().registrarIncidente(
+        com.example.py_damb2026ii.repository.SupabaseIncidentRepository.INSTANCE.registrarIncidente(
                 requireContext(),
-                token,
-                idUsuario,
                 titulo,
                 descripcion,
                 categoria,
                 prioridad,
-                sucursalSeleccionada != null ? sucursalSeleccionada.id : 1,
-                idActivoSeleccionado,
-                codigoQrPendiente,
-                fotosSeleccionadas,
-                new com.example.py_damb2026ii.repository.IncidentRepository.RepositoryCallback<RptaInsertarIncidente>() {
+                idActivoSeleccionado != null ? String.valueOf(idActivoSeleccionado) : null,
+                new com.example.py_damb2026ii.repository.IncidentCallback() {
                     @Override
-                    public void onDataLoaded(RptaInsertarIncidente data, boolean isFromCache, String errorMessage) {
+                    public void onSuccess(@NonNull String incidenteId) {
                         if (!isAdded() || binding == null) return;
                         binding.addIncidentButton.setEnabled(true);
                         binding.addIncidentButton.setText("Enviar incidente");
-
-                        if (isFromCache) {
-                            Snackbar.make(binding.getRoot(),
-                                    errorMessage != null ? errorMessage : "Sin conexión: se enviará automáticamente al recuperar internet",
-                                    Snackbar.LENGTH_LONG).show();
-                            if (transaccionOK != null) {
-                                transaccionOK.run();
-                            }
-                        } else if (data != null && data.getCode() == 1) {
-                            if (transaccionOK != null) {
-                                transaccionOK.run();
-                            }
-                        } else {
-                            Snackbar.make(binding.getRoot(),
-                                    errorMessage != null ? errorMessage : "Error al registrar incidente",
-                                    Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(binding.getRoot(), "Incidente registrado exitosamente", Snackbar.LENGTH_SHORT).show();
+                        if (transaccionOK != null) {
+                            transaccionOK.run();
                         }
                     }
 
                     @Override
-                    public void onHttpError(int code) {
+                    public void onError(@NonNull String message) {
                         if (!isAdded() || binding == null) return;
                         binding.addIncidentButton.setEnabled(true);
                         binding.addIncidentButton.setText("Enviar incidente");
-                        if (code == 401) {
-                            com.example.py_damb2026ii.util.SesionHelper.cerrarSesionPorVencimiento(requireContext());
-                        } else {
-                            Snackbar.make(binding.getRoot(), "Error HTTP: " + code, Snackbar.LENGTH_LONG).show();
-                        }
+                        Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
                     }
-                }
+                },
+                androidx.lifecycle.LifecycleOwnerKt.getLifecycleScope(this)
         );
     }
 
