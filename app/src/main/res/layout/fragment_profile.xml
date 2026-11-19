@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F8FB"
+    android:background="@color/screenBackground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -16,17 +16,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tu cuenta"
-            android:textColor="#1B3145"
-            android:textSize="14sp" />
+            android:textColor="@color/textPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@android:color/white"
+            app:cardBackgroundColor="@color/softCard"
             app:cardCornerRadius="20dp"
             app:cardElevation="2dp"
-            app:strokeColor="#D9E6EE"
+            app:strokeColor="@color/caral_soft_green_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -39,7 +40,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="76dp"
                     android:layout_height="76dp"
-                    app:cardBackgroundColor="#DCEEF7"
+                    app:cardBackgroundColor="@color/caral_soft_green"
                     app:cardCornerRadius="40dp"
                     app:cardElevation="0dp">
 
@@ -49,7 +50,7 @@
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:text="YA"
-                        android:textColor="#397CA7"
+                        android:textColor="@color/caral_green"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
@@ -62,7 +63,7 @@
                     android:layout_marginTop="16dp"
                     android:gravity="center"
                     android:text="Nombre del usuario"
-                    android:textColor="#1B3145"
+                    android:textColor="@color/textPrimary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -72,21 +73,22 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:text="Administrador"
-                    android:textColor="#4D88B3"
-                    android:textSize="13sp" />
+                    android:textColor="@color/caral_gold"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="22dp"
                     android:layout_marginBottom="18dp"
-                    android:background="#E3EDF4" />
+                    android:background="@color/caral_soft_green_border" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Información de la cuenta"
-                    android:textColor="#1B3145"
+                    android:textColor="@color/textPrimary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -95,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Nombre"
-                    android:textColor="#8AA1B3"
+                    android:textColor="@color/textSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -104,7 +106,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Usuario"
-                    android:textColor="#1B3145"
+                    android:textColor="@color/textPrimary"
                     android:textSize="14sp" />
 
                 <TextView
@@ -112,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Tipo de usuario"
-                    android:textColor="#8AA1B3"
+                    android:textColor="@color/textSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -121,7 +123,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Administrador"
-                    android:textColor="#1B3145"
+                    android:textColor="@color/textPrimary"
                     android:textSize="14sp" />
 
             </LinearLayout>
@@ -135,12 +137,12 @@
             android:layout_marginTop="28dp"
             android:text="Cerrar sesión"
             android:textAllCaps="false"
-            android:textColor="#C86B63"
+            android:textColor="@color/caral_orange"
             android:textSize="15sp"
             android:textStyle="bold"
-            app:backgroundTint="#FCEDEC"
+            app:backgroundTint="@color/caral_soft_green"
             app:cornerRadius="14dp"
-            app:strokeColor="#F0C9C5"
+            app:strokeColor="@color/caral_soft_green_border"
             app:strokeWidth="1dp" />
 
     </LinearLayout>

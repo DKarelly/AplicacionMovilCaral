@@ -111,38 +111,24 @@ public class MainActivity extends AppCompatActivity {
 
         String rol = prefs.getString("USER_ROLE", "").trim();
 
-        boolean esAdministradorEmpresa =
-                "Administrador".equalsIgnoreCase(rol);
+        boolean esAdminGlobal = "ADMIN_GLOBAL".equalsIgnoreCase(rol);
+        boolean esAdminEmpresa = "ADMIN_EMPRESA".equalsIgnoreCase(rol) || "Administrador".equalsIgnoreCase(rol);
+        boolean puedeGestionar = com.example.py_damb2026ii.util.SesionHelper.puedeGestionarIncidentes(prefs);
+        boolean mostrarGestion = esAdminGlobal || esAdminEmpresa || puedeGestionar;
 
-// COMPROBACIÓN TEMPORAL
-        Snackbar.make(
-                binding.getRoot(),
-                "Rol detectado: [" + rol + "]",
-                Snackbar.LENGTH_LONG
-        ).show();
-
-// Gestión: exclusiva del administrador.
+// Gestión y Mapa: disponibles para administradores y gerentes con puede_gestionar_incidentes
         binding.navBranches.setVisibility(
-                esAdministradorEmpresa ? View.VISIBLE : View.GONE
+                mostrarGestion ? View.VISIBLE : View.GONE
         );
 
-// Mapa: exclusivo del administrador.
         binding.navMap.setVisibility(
-                esAdministradorEmpresa ? View.VISIBLE : View.GONE
+                mostrarGestion ? View.VISIBLE : View.GONE
         );
 
-        binding.navMap.setEnabled(esAdministradorEmpresa);
-        binding.navMap.setClickable(esAdministradorEmpresa);
-
-// Gestión: exclusiva del administrador.
-        binding.navBranches.setVisibility(
-                esAdministradorEmpresa ? View.VISIBLE : View.GONE
-        );
-
-// Mapa: exclusivo del administrador.
-        binding.navMap.setVisibility(
-                esAdministradorEmpresa ? View.VISIBLE : View.GONE
-        );
+        binding.navMap.setEnabled(mostrarGestion);
+        binding.navMap.setClickable(mostrarGestion);
+        binding.navBranches.setEnabled(mostrarGestion);
+        binding.navBranches.setClickable(mostrarGestion);
 
         appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.IncidentListFragment,
@@ -165,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 // MAPA
         binding.navMap.setOnClickListener(v -> {
 
-            if (!esAdministradorEmpresa) return;
+            if (!mostrarGestion) return;
 
             if (navController.getCurrentDestination() != null
                     && navController.getCurrentDestination().getId()
@@ -184,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
 // GESTIÓN
         binding.navBranches.setOnClickListener(v -> {
 
-            if (!esAdministradorEmpresa) return;
+            if (!mostrarGestion) return;
 
             if (navController.getCurrentDestination() != null
                     && navController.getCurrentDestination().getId()
@@ -235,14 +221,11 @@ public class MainActivity extends AppCompatActivity {
                     );
 
                     // Botón para registrar incidentes:
-                    // exclusivo del solicitante.
-                    boolean solicitante =
-                            "Solicitante".equalsIgnoreCase(
-                                    prefs.getString("USER_ROLE", "")
-                            );
+                    // Todos excepto los técnicos pueden registrar incidentes.
+                    boolean esTecnico = "Técnico".equalsIgnoreCase(rol) || "TECNICO".equalsIgnoreCase(rol);
 
                     binding.fab.setVisibility(
-                            enListado && solicitante
+                            enListado && !esTecnico
                                     ? View.VISIBLE
                                     : View.GONE
                     );
@@ -287,14 +270,6 @@ public class MainActivity extends AppCompatActivity {
 
         solicitarPermisoNotificaciones();
         procesarIntentNotificacion(getIntent());
-    }
-
-    // Comprobar el rol del administrador de empresa.
-    private boolean esAdministradorEmpresa() {
-
-        String rol = prefs.getString("USER_ROLE", "");
-
-        return "Administrador".equalsIgnoreCase(rol);
     }
 
     public void solicitarCerrarSesion() {
