@@ -1,6 +1,7 @@
 package com.example.py_damb2026ii.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.py_damb2026ii.network.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
@@ -15,6 +16,8 @@ interface IncidentCallback {
 }
 
 object SupabaseIncidentRepository {
+
+    private const val TAG = "SupabaseIncidentRepo"
 
     fun registrarIncidente(
         context: Context,
@@ -32,9 +35,13 @@ object SupabaseIncidentRepository {
                 val empresaId = prefs.getString("USER_EMPRESA_ID", "")
                 val sucursalId = prefs.getString("USER_SUCURSAL_ID", "")
 
+                Log.d(TAG, "Registrando incidente -> empresaId: $empresaId, sucursalId: $sucursalId, titulo: $titulo, categoria: $categoria, prioridad: $prioridad")
+
                 if (empresaId.isNullOrEmpty() || sucursalId.isNullOrEmpty()) {
+                    val errMsg = "No se encontró la empresa o sucursal del usuario en la sesión."
+                    Log.e(TAG, errMsg)
                     withContext(Dispatchers.Main) {
-                        callback.onError("No se encontró la empresa o sucursal del usuario en la sesión.")
+                        callback.onError(errMsg)
                     }
                     return@launch
                 }
@@ -51,15 +58,22 @@ object SupabaseIncidentRepository {
                     "p_activo_id" to activoId
                 )
 
-                val incidenteId = postgrest.rpc("inc_crear_incidente", params).decodeSingle<String>()
+                // Ejecutar RPC inc_crear_incidente obteniendo el resultado crudo para evitar errores de serialización escalar
+                val result = postgrest.rpc("inc_crear_incidente", params)
+                val rawData = result.data
+                val incidenteId = rawData.trim('"').trim()
+
+                Log.d(TAG, "Incidente registrado exitosamente. ID devuelto: $incidenteId, Raw data: $rawData")
 
                 withContext(Dispatchers.Main) {
                     callback.onSuccess(incidenteId)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                val errorMsg = "Error al registrar incidente: ${e.message}"
+                Log.e(TAG, errorMsg, e)
                 withContext(Dispatchers.Main) {
-                    callback.onError("Error al registrar incidente: ${e.message}")
+                    callback.onError(errorMsg)
                 }
             }
         }
