@@ -107,7 +107,8 @@ public class LoginActivity extends AppCompatActivity {
                             .putString("USER_NAME", user.getNombre())
                             .putString("USER_ID", user.getId())
                             .putString("USER_EMPRESA_ID",
-                                    user.getEmpresa_id() != null ? user.getEmpresa_id() : "");
+                                    user.getEmpresa_id() != null ? user.getEmpresa_id() : "")
+                            .putBoolean("PUEDE_GESTIONAR_INCIDENTES", user.isPuedeGestionarIncidentes());
 
                     if (user.getSucursal_id() != null) {
                         editor.putString("USER_SUCURSAL_ID", user.getSucursal_id());

@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -20,8 +21,15 @@ data class MobileUser(
     val rol: String,
     val empresa_id: String? = null,
     val sucursal_id: String? = null,
-    val activo: Boolean
-)
+    val activo: Boolean,
+    @SerialName("puede_gestionar_incidentes")
+    val puedeGestionarIncidentes: Boolean = false,
+    @SerialName("areas_autorizadas")
+    val areasAutorizadas: List<String> = emptyList()
+) {
+    fun isPuedeGestionarIncidentes(): Boolean = puedeGestionarIncidentes
+    fun getAreasAutorizadasList(): List<String> = areasAutorizadas
+}
 
 @Serializable
 data class MobileMembership(
@@ -67,13 +75,23 @@ object SupabaseAuthRepository {
                     return@launch
                 }
 
-                val userResult = postgrest["inc_usuarios"].select {
-                    filter {
-                        eq("id", userId)
-                    }
-                }.decodeList<MobileUser>()
+                // 1. Intentar obtener perfil mediante la función RPC del ERP inc_perfil_usuario_actual()
+                var perfil: MobileUser? = null
+                try {
+                    perfil = postgrest.rpc("inc_perfil_usuario_actual").decodeSingleOrNull<MobileUser>()
+                } catch (e: Exception) {
+                    // Fallback a consulta directa de inc_usuarios si la RPC no está disponible aún
+                }
 
-                val perfil = userResult.firstOrNull()
+                // 2. Si la RPC falló o no retornó perfil, consultar inc_usuarios directamente
+                if (perfil == null) {
+                    val userResult = postgrest["inc_usuarios"].select {
+                        filter {
+                            eq("id", userId)
+                        }
+                    }.decodeList<MobileUser>()
+                    perfil = userResult.firstOrNull()
+                }
 
                 if (perfil == null || !perfil.activo) {
                     auth.signOut()
@@ -161,7 +179,6 @@ object SupabaseAuthRepository {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Si falla por red u otra razón, pero teníamos token guardado, permitimos abrir si la sesión local aún no expiró
                 val prefs = context.getSharedPreferences("USAT_SP", Context.MODE_PRIVATE)
                 val hasToken = !prefs.getString("TOKEN_JWT", "").isNullOrEmpty()
                 withContext(Dispatchers.Main) {
